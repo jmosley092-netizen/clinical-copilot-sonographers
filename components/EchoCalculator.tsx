@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,7 +19,6 @@ type SavedReport = {
 };
 
 export function EchoCalculator({ specialty = "Echocardiography" }: { specialty?: string }) {
-  // Calculator states
   const [eaRatio, setEaRatio] = useState(0.8);
   const [eSeptal, setESeptal] = useState(7);
   const [lvotDiameter, setLvotDiameter] = useState(2.0);
@@ -38,7 +38,6 @@ export function EchoCalculator({ specialty = "Echocardiography" }: { specialty?:
   const [feedback, setFeedback] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
-  // Load saved reports
   useEffect(() => {
     const saved = localStorage.getItem("echoReports");
     if (saved) setSavedReports(JSON.parse(saved));
@@ -52,7 +51,6 @@ export function EchoCalculator({ specialty = "Echocardiography" }: { specialty?:
     return () => { if (imagePreview) URL.revokeObjectURL(imagePreview); };
   }, [imagePreview]);
 
-  // Calculations
   const getDiastologyGrade = () => {
     if (eaRatio < 0.8) return { grade: "Grade I", color: "text-emerald-400", desc: "Impaired relaxation" };
     if (eaRatio > 2) return { grade: "Grade III", color: "text-red-400", desc: "Restrictive filling" };
@@ -63,7 +61,6 @@ export function EchoCalculator({ specialty = "Echocardiography" }: { specialty?:
   const eroA = (2 * Math.PI * Math.pow(pisaRadius, 2) * aliasingVelocity) / mrPeakVelocity;
   const diastology = getDiastologyGrade();
 
-  // Drag & Drop
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     const file = e.dataTransfer.files[0];
@@ -73,7 +70,6 @@ export function EchoCalculator({ specialty = "Echocardiography" }: { specialty?:
     }
   };
 
-  // AI Analysis
   const analyzeWithAI = async () => {
     if (!image) {
       alert("Please drag in an ultrasound image first");
@@ -97,7 +93,7 @@ export function EchoCalculator({ specialty = "Echocardiography" }: { specialty?:
       const data = await res.json();
       setFeedback(data);
     } catch (err) {
-      alert("Backend error – make sure the droplet terminal is still open running 'python main.py'");
+      alert("Backend error – make sure the droplet terminal is still open and running 'python main.py'");
     }
     setLoading(false);
   };
@@ -144,7 +140,7 @@ export function EchoCalculator({ specialty = "Echocardiography" }: { specialty?:
           <Input value={institution} onChange={e => setInstitution(e.target.value)} className="mt-1 bg-zinc-950 border-zinc-700" />
         </div>
 
-        {/* Drag & Drop */}
+        {/* Thumbnail + Drag & Drop */}
         <div
           onDrop={handleDrop}
           onDragOver={e => e.preventDefault()}
