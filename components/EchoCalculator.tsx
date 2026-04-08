@@ -34,7 +34,7 @@ export function EchoCalculator() {
   const [savedReports, setSavedReports] = useState<SavedReport[]>([]);
   const [institution, setInstitution] = useState("Your Hospital / School Name");
 
-  // === NEW: Image + Thumbnail ===
+  // === Image + Thumbnail ===
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<any>(null);
@@ -50,7 +50,6 @@ export function EchoCalculator() {
     localStorage.setItem("echoReports", JSON.stringify(savedReports));
   }, [savedReports]);
 
-  // Cleanup preview URL to prevent memory leaks
   useEffect(() => {
     return () => { if (imagePreview) URL.revokeObjectURL(imagePreview); };
   }, [imagePreview]);
@@ -77,7 +76,7 @@ export function EchoCalculator() {
     }
   };
 
-  // === AI ANALYSIS (now ready to call backend) ===
+  // === AI ANALYSIS (now using real backend) ===
   const analyzeWithAI = async () => {
     if (!image) {
       alert("Please drag in an ultrasound image first");
@@ -95,20 +94,35 @@ export function EchoCalculator() {
     }));
 
     try {
-      const res = await fetch("https://YOUR-DROPLET-IP:8000/analyze-echo", {
+      const res = await fetch("http://45.55.59.17:8000/analyze-echo", {
         method: "POST",
         body: formData,
       });
       const data = await res.json();
       setFeedback(data);
     } catch (err) {
-      alert("Backend not responding yet — we'll activate it in the next step!");
+      alert("Error reaching backend. Make sure the droplet terminal is still open and running 'python main.py'");
       console.error(err);
     }
     setLoading(false);
   };
 
-  const saveReport = () => { /* unchanged — your original saveReport code */ };
+  const saveReport = () => {
+    const report: SavedReport = {
+      id: Date.now().toString(),
+      date: new Date().toLocaleString(),
+      tab: activeTab,
+      institution,
+      inputs: { eaRatio, eSeptal, lvotDiameter, lvotVti, aorticVti, pisaRadius, aliasingVelocity, mrPeakVelocity, tapse },
+      results: activeTab === "diastology" ? diastology.grade : 
+               activeTab === "as" ? `${ava.toFixed(2)} cm²` :
+               activeTab === "mr" ? `${eroA.toFixed(2)} cm²` : 
+               tapse >= 17 ? "Normal" : "Reduced",
+    };
+    setSavedReports([report, ...savedReports]);
+    alert("✅ Report saved!");
+  };
+
   const resetAll = () => {
     setEaRatio(0.8); setESeptal(7);
     setLvotDiameter(2.0); setLvotVti(20); setAorticVti(100);
@@ -124,55 +138,27 @@ export function EchoCalculator() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-emerald-400">
           <Calculator className="w-6 h-6" />
-          Clinical CoPilot – Echo MVP++
+          CloudSono.AI – Clinical CoPilot
         </CardTitle>
-        <p className="text-xs text-zinc-500">AI-Assisted Feedback • Any ultrasound machine</p>
+        <p className="text-xs text-zinc-500">AI-Assisted Educational Feedback • Echo Calculations</p>
       </CardHeader>
 
       <CardContent className="space-y-8">
-        {/* Institution field */}
+        {/* Institution */}
         <div>
           <Label className="text-zinc-400">Institution (shows on all reports)</Label>
           <Input value={institution} onChange={e => setInstitution(e.target.value)} className="mt-1 bg-zinc-950 border-zinc-700" />
         </div>
 
-        {/* Drag & Drop with THUMBNAIL */}
-        <div
-          onDrop={handleDrop}
-          onDragOver={e => e.preventDefault()}
-          className="border-2 border-dashed border-emerald-500 rounded-2xl p-6 text-center hover:bg-zinc-950 transition relative"
-        >
+        {/* Drag & Drop with thumbnail */}
+        <div onDrop={handleDrop} onDragOver={e => e.preventDefault()} className="border-2 border-dashed border-emerald-500 rounded-2xl p-6 text-center hover:bg-zinc-950 transition relative">
           {imagePreview ? (
             <div className="space-y-3">
               <img src={imagePreview} alt="Ultrasound preview" className="max-h-64 mx-auto rounded-xl shadow-inner border border-zinc-700" />
-              <p className="text-emerald-400 text-sm font-medium">✅ {image?.name} ready for AI</p>
+              <p className="text-emerald-400 text-sm font-medium">✅ {image?.name}</p>
             </div>
           ) : (
             <>
               <Upload className="mx-auto w-12 h-12 text-emerald-400" />
               <p className="mt-4 font-medium">Drag &amp; drop ultrasound image here</p>
-              <p className="text-sm text-zinc-500">GE Logiq e95, Vscan Air, or any machine (JPEG/PNG/DICOM)</p>
-            </>
-          )}
-        </div>
-
-        {/* Your existing Tabs go here — unchanged (copy them from your previous version) */}
-
-        <Separator className="bg-zinc-700" />
-
-        <Button
-          onClick={analyzeWithAI}
-          disabled={loading || !image}
-          className="w-full bg-emerald-600 hover:bg-emerald-700 text-lg py-6"
-        >
-          {loading ? "Analyzing with AI-Assisted Feedback..." : "Analyze Image with AI-Assisted Feedback"}
-        </Button>
-
-        {/* AI Results + Send to Navigator button — unchanged from last version */}
-
-        {/* Your Save/Reset + Saved Reports section — unchanged */}
-
-      </CardContent>
-    </Card>
-  );
-}
+              <p className="text-sm text-zinc-500
