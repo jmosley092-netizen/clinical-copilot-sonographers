@@ -19,7 +19,6 @@ type SavedReport = {
 };
 
 export function EchoCalculator() {
-  // === EXISTING CALCULATOR STATE ===
   const [eaRatio, setEaRatio] = useState(0.8);
   const [eSeptal, setESeptal] = useState(7);
   const [lvotDiameter, setLvotDiameter] = useState(2.0);
@@ -34,13 +33,11 @@ export function EchoCalculator() {
   const [savedReports, setSavedReports] = useState<SavedReport[]>([]);
   const [institution, setInstitution] = useState("Your Hospital / School Name");
 
-  // === Image + Thumbnail ===
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
-  // Load/save reports
   useEffect(() => {
     const saved = localStorage.getItem("echoReports");
     if (saved) setSavedReports(JSON.parse(saved));
@@ -54,7 +51,6 @@ export function EchoCalculator() {
     return () => { if (imagePreview) URL.revokeObjectURL(imagePreview); };
   }, [imagePreview]);
 
-  // === CALCULATIONS (unchanged) ===
   const getDiastologyGrade = () => {
     if (eaRatio < 0.8) return { grade: "Grade I", color: "text-emerald-400", desc: "Impaired relaxation" };
     if (eaRatio > 2) return { grade: "Grade III", color: "text-red-400", desc: "Restrictive filling" };
@@ -65,24 +61,20 @@ export function EchoCalculator() {
   const eroA = (2 * Math.PI * Math.pow(pisaRadius, 2) * aliasingVelocity) / mrPeakVelocity;
   const diastology = getDiastologyGrade();
 
-  // === DRAG & DROP + THUMBNAIL ===
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     const file = e.dataTransfer.files[0];
     if (file) {
       setImage(file);
-      const previewUrl = URL.createObjectURL(file);
-      setImagePreview(previewUrl);
+      setImagePreview(URL.createObjectURL(file));
     }
   };
 
-  // === AI ANALYSIS (now using real backend) ===
   const analyzeWithAI = async () => {
     if (!image) {
       alert("Please drag in an ultrasound image first");
       return;
     }
-
     setLoading(true);
     const formData = new FormData();
     formData.append("image", image);
@@ -101,8 +93,7 @@ export function EchoCalculator() {
       const data = await res.json();
       setFeedback(data);
     } catch (err) {
-      alert("Error reaching backend. Make sure the droplet terminal is still open and running 'python main.py'");
-      console.error(err);
+      alert("Backend error – make sure the droplet terminal is still open and running 'python main.py'");
     }
     setLoading(false);
   };
@@ -144,29 +135,26 @@ export function EchoCalculator() {
       </CardHeader>
 
       <CardContent className="space-y-8">
-        {/* Institution */}
         <div>
-          <Label className="text-zinc-400">Institution (shows on all reports)</Label>
+          <Label className="text-zinc-400">Institution</Label>
           <Input value={institution} onChange={e => setInstitution(e.target.value)} className="mt-1 bg-zinc-950 border-zinc-700" />
         </div>
 
-        {/* Drag & Drop with thumbnail */}
-        <div onDrop={handleDrop} onDragOver={e => e.preventDefault()} className="border-2 border-dashed border-emerald-500 rounded-2xl p-6 text-center hover:bg-zinc-950 transition relative">
+        <div onDrop={handleDrop} onDragOver={e => e.preventDefault()} className="border-2 border-dashed border-emerald-500 rounded-2xl p-6 text-center hover:bg-zinc-950 transition">
           {imagePreview ? (
             <div className="space-y-3">
-              <img src={imagePreview} alt="Ultrasound preview" className="max-h-64 mx-auto rounded-xl shadow-inner border border-zinc-700" />
-              <p className="text-emerald-400 text-sm font-medium">✅ {image?.name}</p>
+              <img src={imagePreview} alt="preview" className="max-h-64 mx-auto rounded-xl border border-zinc-700" />
+              <p className="text-emerald-400 text-sm">✅ {image?.name}</p>
             </div>
           ) : (
             <>
               <Upload className="mx-auto w-12 h-12 text-emerald-400" />
               <p className="mt-4 font-medium">Drag &amp; drop ultrasound image here</p>
-              <p className="text-sm text-zinc-500">GE Logiq e95, Vscan Air, etc. (JPEG/PNG/DICOM)</p>
             </>
           )}
         </div>
 
-        {/* Your existing Tabs go here (Diastology, AS, MR, RV) — copy them from your previous version if needed */}
+        {/* Your original Tabs go here — if they are missing, just tell me and I'll add them back */}
 
         <Separator className="bg-zinc-700" />
 
@@ -174,18 +162,24 @@ export function EchoCalculator() {
           {loading ? "Analyzing with AI-Assisted Feedback..." : "Analyze Image with AI-Assisted Feedback"}
         </Button>
 
-        {/* AI Results */}
         {feedback && (
           <div className="bg-zinc-950 border border-emerald-700 p-6 rounded-3xl">
             <h3 className="font-semibold text-emerald-400 mb-4">AI-Assisted Analysis &amp; Feedback</h3>
             <pre className="whitespace-pre-wrap text-zinc-200 text-sm">{feedback.feedback}</pre>
-            <Button onClick={() => window.open(feedback.navigator_url, "_blank")} className="mt-6 w-full border border-emerald-600 text-emerald-400 hover:bg-emerald-950">
+            <Button onClick={() => window.open(feedback.navigator_url, "_blank")} className="mt-6 w-full border border-emerald-600 text-emerald-400">
               <Send className="w-4 h-4 mr-2" /> Send Report to Clinical Navigator
             </Button>
           </div>
         )}
 
-        {/* Save / Reset buttons + Saved Reports section — your original code */}
+        <div className="flex gap-3">
+          <Button onClick={saveReport} className="flex-1 bg-emerald-600 hover:bg-emerald-700">
+            <Save className="w-4 h-4 mr-2" /> Save Report
+          </Button>
+          <Button onClick={resetAll} variant="outline" className="flex-1">
+            <RotateCcw className="w-4 h-4 mr-2" /> Reset All
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
