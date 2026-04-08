@@ -161,4 +161,32 @@ export function EchoCalculator() {
             <>
               <Upload className="mx-auto w-12 h-12 text-emerald-400" />
               <p className="mt-4 font-medium">Drag &amp; drop ultrasound image here</p>
-              <p className="text-sm text-zinc-500
+              <p className="text-sm text-zinc-500">GE Logiq e95, Vscan Air, etc. (JPEG/PNG/DICOM)</p>
+            </>
+          )}
+        </div>
+
+        {/* Your existing Tabs go here (Diastology, AS, MR, RV) — copy them from your previous version if needed */}
+
+        <Separator className="bg-zinc-700" />
+
+        <Button onClick={analyzeWithAI} disabled={loading || !image} className="w-full bg-emerald-600 hover:bg-emerald-700 text-lg py-6">
+          {loading ? "Analyzing with AI-Assisted Feedback..." : "Analyze Image with AI-Assisted Feedback"}
+        </Button>
+
+        {/* AI Results */}
+        {feedback && (
+          <div className="bg-zinc-950 border border-emerald-700 p-6 rounded-3xl">
+            <h3 className="font-semibold text-emerald-400 mb-4">AI-Assisted Analysis &amp; Feedback</h3>
+            <pre className="whitespace-pre-wrap text-zinc-200 text-sm">{feedback.feedback}</pre>
+            <Button onClick={() => window.open(feedback.navigator_url, "_blank")} className="mt-6 w-full border border-emerald-600 text-emerald-400 hover:bg-emerald-950">
+              <Send className="w-4 h-4 mr-2" /> Send Report to Clinical Navigator
+            </Button>
+          </div>
+        )}
+
+        {/* Save / Reset buttons + Saved Reports section — your original code */}
+      </CardContent>
+    </Card>
+  );
+}
