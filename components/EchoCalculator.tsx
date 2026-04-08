@@ -112,7 +112,12 @@ export function EchoCalculator({ specialty = "Echocardiography" }: { specialty?:
           <Input value={institution} onChange={e => setInstitution(e.target.value)} className="mt-1 bg-zinc-950 border-zinc-700" />
         </div>
 
-        <div onDrop={handleDrop} onDragOver={e => e.preventDefault()} className="border-2 border-dashed border-emerald-500 rounded-2xl p-6 text-center hover:bg-zinc-950 transition">
+        {/* Thumbnail + Drag & Drop */}
+        <div
+          onDrop={handleDrop}
+          onDragOver={e => e.preventDefault()}
+          className="border-2 border-dashed border-emerald-500 rounded-2xl p-6 text-center hover:bg-zinc-950 transition"
+        >
           {imagePreview ? (
             <div className="space-y-3">
               <img src={imagePreview} alt="preview" className="max-h-64 mx-auto rounded-xl border border-zinc-700" />
@@ -126,7 +131,11 @@ export function EchoCalculator({ specialty = "Echocardiography" }: { specialty?:
           )}
         </div>
 
-        <Button onClick={analyzeWithAI} disabled={loading || !image} className="w-full bg-emerald-600 hover:bg-emerald-700 text-lg py-6">
+        <Button
+          onClick={analyzeWithAI}
+          disabled={loading || !image}
+          className="w-full bg-emerald-600 hover:bg-emerald-700 text-lg py-6"
+        >
           {loading ? "Analyzing with AI-Assisted Feedback..." : "Analyze Image with AI-Assisted Feedback"}
         </Button>
 
@@ -136,6 +145,15 @@ export function EchoCalculator({ specialty = "Echocardiography" }: { specialty?:
             <pre className="whitespace-pre-wrap text-zinc-200 text-sm">{feedback.feedback}</pre>
           </div>
         )}
+
+        <div className="flex gap-3">
+          <Button onClick={saveReport} className="flex-1 bg-emerald-600 hover:bg-emerald-700">
+            <Save className="w-4 h-4 mr-2" /> Save Report
+          </Button>
+          <Button onClick={resetAll} variant="outline" className="flex-1">
+            <RotateCcw className="w-4 h-4 mr-2" /> Reset All
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
