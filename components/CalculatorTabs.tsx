@@ -5,7 +5,7 @@ import { EchoCalculator } from "./EchoCalculator";
 
 export function CalculatorTabs() {
   return (
-    <Tabs defaultValue="echo" className="w-full">
+    <Tabs defaultValue="echo" className="w-full max-w-4xl mx-auto">
       <TabsList className="grid grid-cols-4 bg-zinc-950 border border-zinc-700">
         <TabsTrigger value="echo">Echocardiography</TabsTrigger>
         <TabsTrigger value="obgyn">OB/GYN</TabsTrigger>
