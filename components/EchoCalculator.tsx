@@ -75,7 +75,7 @@ export function EchoCalculator({ specialty = "Echocardiography" }: { specialty?:
     }));
 
     try {
-      const res = await fetch("http://45.55.59.17:8001/analyze-echo", {
+      const res = await fetch("http://45.55.59.17:8000/analyze-echo", {
         method: "POST",
         body: formData,
       });
