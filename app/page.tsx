@@ -1,4 +1,4 @@
-import { CalculatorTabs } from "@/components/CalculatorTabs";
+import ClinicalTabs from "@/components/ClinicalTabs";
 
 export default function Home() {
   return (
@@ -11,7 +11,7 @@ export default function Home() {
           Educational ultrasound calculators • Built for sonography students &amp; educators
         </p>
       </div>
-      <CalculatorTabs />
+      <ClinicalTabs />
     </div>
   );
 }
