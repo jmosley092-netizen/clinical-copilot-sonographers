@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 
 export default function EchoFreeCalculator() {
   const [inputs, setInputs] = useState({
-    gender: 'male' as 'male' | 'female',
+    gender: '' as '' | 'male' | 'female',
     heightCm: '', heightIn: '', weightKg: '', weightLb: '', hr: '',
     ivsd: '', ivss: '', lvidd: '', lvids: '', lvpwd: '', lvpws: '', edv: '', esv: '',
     E: '', A: '', es: '', el: '', lavi: '', ivrt: '', sd: '', lars: '',
@@ -97,9 +97,14 @@ export default function EchoFreeCalculator() {
             <button onClick={() => resetCard(['gender','heightCm','heightIn','weightKg','weightLb','hr'])} className="px-4 py-1 text-xs bg-blue-600 hover:bg-blue-700 rounded-xl">Reset</button>
           </div>
           <div className="space-y-4">
-            <select value={inputs.gender} onChange={e => update('gender', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3 text-white">
-              <option value="male">Male</option>
-              <option value="female">Female</option>
+            <select 
+                value={inputs.gender} 
+                onChange={e => update('gender', e.target.value)} 
+                className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3 text-white"
+>
+                <option value="">Select Gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
             </select>
             <div className="grid grid-cols-2 gap-3">
               <div><div className="text-xs text-cyan-400 mb-1">Height (cm)</div><input type="number" value={inputs.heightCm} onChange={e => update('heightCm', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
