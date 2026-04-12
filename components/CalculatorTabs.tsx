@@ -1,29 +1,18 @@
 "use client";
 
 import React, { useState } from "react";
-import EchoFreeCalculator from "./EchoFreeCalculator";   // ← NEW IMPORT
+import EchoFreeCalculator from "./EchoFreeCalculator";   // ← This line is critical
 
 const ClinicalTabs: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"navigator" | "calculator">("navigator");
 
-  // Navigator tab (unchanged)
+  // Navigator tab (kept simple for now)
   const [images, setImages] = useState<File[]>([]);
-  const [analysisResult, setAnalysisResult] = useState("");
-  const [selectedCalculator, setSelectedCalculator] = useState("");
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     const files = Array.from(e.dataTransfer.files);
     setImages(files);
-  };
-
-  const handleAnalyze = () => {
-    if (images.length === 0) return;
-    setAnalysisResult("Analyzing with AI (MedGemma)...");
-    setTimeout(() => {
-      setSelectedCalculator("Vascular Calculator");
-      setAnalysisResult("✅ Analysis complete\nDetected vascular study\nAuto-selected: Vascular Calculator");
-    }, 1200);
   };
 
   return (
@@ -33,9 +22,7 @@ const ClinicalTabs: React.FC = () => {
         <button
           onClick={() => setActiveTab("navigator")}
           className={`px-8 py-4 text-xl font-medium transition-all ${
-            activeTab === "navigator"
-              ? "border-b-4 border-cyan-400 text-cyan-400"
-              : "text-zinc-400 hover:text-zinc-200"
+            activeTab === "navigator" ? "border-b-4 border-cyan-400 text-cyan-400" : "text-zinc-400 hover:text-zinc-200"
           }`}
         >
           📸 Navigator
@@ -43,16 +30,14 @@ const ClinicalTabs: React.FC = () => {
         <button
           onClick={() => setActiveTab("calculator")}
           className={`px-8 py-4 text-xl font-medium transition-all ${
-            activeTab === "calculator"
-              ? "border-b-4 border-cyan-400 text-cyan-400"
-              : "text-zinc-400 hover:text-zinc-200"
+            activeTab === "calculator" ? "border-b-4 border-cyan-400 text-cyan-400" : "text-zinc-400 hover:text-zinc-200"
           }`}
         >
           🫀 Echo Calculator
         </button>
       </div>
 
-      {/* Navigator Tab (unchanged) */}
+      {/* Navigator Tab */}
       {activeTab === "navigator" && (
         <div className="space-y-6">
           <div
@@ -69,25 +54,10 @@ const ClinicalTabs: React.FC = () => {
               </div>
             )}
           </div>
-
-          <button
-            onClick={handleAnalyze}
-            disabled={images.length === 0}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-6 rounded-2xl text-2xl font-semibold"
-          >
-            Analyze with AI
-          </button>
-
-          {analysisResult && (
-            <div className="bg-green-900/30 border border-green-400 p-6 rounded-3xl">
-              <p className="whitespace-pre-line text-green-300">{analysisResult}</p>
-              {selectedCalculator && <p className="mt-3 text-cyan-400">Auto-selected: {selectedCalculator}</p>}
-            </div>
-          )}
         </div>
       )}
 
-      {/* CALCULATOR TAB — NOW YOUR FULL ECHO CALCULATOR */}
+      {/* CALCULATOR TAB — THIS IS WHAT WE WANT TO SEE */}
       {activeTab === "calculator" && <EchoFreeCalculator />}
     </div>
   );
