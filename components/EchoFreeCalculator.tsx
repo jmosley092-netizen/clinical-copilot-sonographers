@@ -54,7 +54,7 @@ export default function EchoFreeCalculator() {
       }
     }
 
-    const lvOut = `
+        const lvOut = `
       EF: ${ef?.toFixed(1) || '-'} %<br>
       FS: ${fs?.toFixed(1) || '-'} %<br>
       RWT: ${rwt?.toFixed(2) || '-'}<br>
@@ -63,7 +63,27 @@ export default function EchoFreeCalculator() {
       <b>${severity}</b>
     `;
 
-    setResults({ patient: patientOut, lv: lvOut });
+    // Diastology - full logic from your original HTML
+    const E = v('E'), A = v('A'), es = v('es'), el = v('el'), lavi = v('lavi');
+    let diaOut = '';
+    if (E && A && es && el) {
+      const eavg = (es + el) / 2;
+      const ratio = E / A;
+      const grade = ratio < 0.8 ? 'Grade I' : ratio <= 2 ? 'Grade II' : 'Grade III';
+      const laSize = lavi && lavi < 34 ? 'Normal' : lavi && lavi < 42 ? 'Mild' : lavi && lavi < 48 ? 'Moderate' : 'Severe';
+      const lap = grade === 'Grade I' ? 'Normal LAP' : grade === 'Grade II' ? 'Mildly to moderately elevated LAP' : 'Markedly elevated LAP';
+      diaOut = `
+        ${grade}<br>
+        LA Size: ${laSize}<br>
+        LA Pressure: ${lap}<br><br>
+        E/A: ${ratio.toFixed(2)}<br>
+        E/e' septal: ${(E/es).toFixed(1)}<br>
+        E/e' lateral: ${(E/el).toFixed(1)}<br>
+        E/e' avg: ${(E/eavg).toFixed(1)}
+      `;
+    }
+
+    setResults({ patient: patientOut, lv: lvOut, dia: diaOut });
   };
 
   useEffect(() => {
