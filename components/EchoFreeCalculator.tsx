@@ -143,7 +143,7 @@ export default function EchoFreeCalculator() {
         🫀 Free Echo Calculator <span className="text-cyan-400 text-xl font-normal">(manual entry • educational)</span>
       </h1>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         {/* Patient Card - already working */}
         <div className="bg-[#111827] border-2 border-cyan-400 rounded-3xl p-6">
           <div className="flex justify-between items-center mb-4">
@@ -188,7 +188,7 @@ export default function EchoFreeCalculator() {
           {results.lv && <div className="mt-6 bg-green-900/30 border border-green-400 p-5 rounded-2xl text-sm leading-relaxed" dangerouslySetInnerHTML={{ __html: results.lv }} />}
         </div>
 
-        {/* Diastology Card - NEW */}
+        {/* Diastology Card - already working */}
         <div className="bg-[#111827] border-2 border-cyan-400 rounded-3xl p-6">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-cyan-300 text-xl">Diastology</h3>
@@ -205,6 +205,23 @@ export default function EchoFreeCalculator() {
             <div><div className="text-xs text-cyan-400 mb-1">LARS</div><input type="number" value={inputs.lars} onChange={e => update('lars', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
           </div>
           {results.dia && <div className="mt-6 bg-green-900/30 border border-green-400 p-5 rounded-2xl text-sm" dangerouslySetInnerHTML={{ __html: results.dia }} />}
+        </div>
+
+        {/* Aortic Stenosis Card - already added */}
+        <div className="bg-[#111827] border-2 border-cyan-400 rounded-3xl p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-cyan-300 text-xl">Aortic Stenosis</h3>
+            <button onClick={() => resetCard(['vmax','mg','lvotd','lvotvti','avvti','plan'])} className="px-4 py-1 text-xs bg-blue-600 hover:bg-blue-700 rounded-xl">Reset</button>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div><div className="text-xs text-cyan-400 mb-1">Vmax (m/s)</div><input type="number" step="0.1" value={inputs.vmax} onChange={e => update('vmax', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+            <div><div className="text-xs text-cyan-400 mb-1">Mean Grad (mmHg)</div><input type="number" step="0.1" value={inputs.mg} onChange={e => update('mg', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+            <div><div className="text-xs text-cyan-400 mb-1">LVOT (cm)</div><input type="number" step="0.1" value={inputs.lvotd} onChange={e => update('lvotd', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+            <div><div className="text-xs text-cyan-400 mb-1">LVOT VTI (cm)</div><input type="number" step="0.1" value={inputs.lvotvti} onChange={e => update('lvotvti', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+            <div><div className="text-xs text-cyan-400 mb-1">AV VTI (cm)</div><input type="number" step="0.1" value={inputs.avvti} onChange={e => update('avvti', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+            <div><div className="text-xs text-cyan-400 mb-1">Planimetry (cm²)</div><input type="number" step="0.1" value={inputs.plan} onChange={e => update('plan', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+          </div>
+          {results.av && <div className="mt-6 bg-green-900/30 border border-green-400 p-5 rounded-2xl text-sm" dangerouslySetInnerHTML={{ __html: results.av }} />}
         </div>
       </div>
     </div>
