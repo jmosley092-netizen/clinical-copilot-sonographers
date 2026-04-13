@@ -28,6 +28,7 @@ export default function EchoFreeCalculator() {
     const bsa = calculateBSA(v('heightCm'), v('weightKg'));
     const gender = inputs.gender;
 
+    // Patient
     const patientOut = bsa ? `BSA: ${bsa.toFixed(2)} m²` : '';
 
     // LV Geometry & Function
@@ -54,7 +55,7 @@ export default function EchoFreeCalculator() {
       }
     }
 
-        const lvOut = `
+    const lvOut = `
       EF: ${ef?.toFixed(1) || '-'} %<br>
       FS: ${fs?.toFixed(1) || '-'} %<br>
       RWT: ${rwt?.toFixed(2) || '-'}<br>
@@ -63,7 +64,7 @@ export default function EchoFreeCalculator() {
       <b>${severity}</b>
     `;
 
-    // Diastology - full logic from your original HTML
+    // Diastology
     const E = v('E'), A = v('A'), es = v('es'), el = v('el'), lavi = v('lavi');
     let diaOut = '';
     if (E && A && es && el) {
@@ -83,9 +84,41 @@ export default function EchoFreeCalculator() {
       `;
     }
 
-    setResults({ patient: patientOut, lv: lvOut, dia: diaOut });
+    // Aortic Stenosis
+    const vmax = v('vmax'), mg = v('mg'), lvotd = v('lvotd'), lvotvti = v('lvotvti'), avvti = v('avvti');
+    let avOut = '';
+    if (vmax || mg) {
+      const ava = lvotd && lvotvti && avvti ? (3.14 * Math.pow(lvotd / 2, 2) * lvotvti) / avvti : null;
+      const di = lvotvti && avvti ? lvotvti / avvti : null;
+      const v_sev = vmax && vmax >= 4 ? 'Severe' : vmax && vmax >= 3 ? 'Moderate' : 'Mild';
+      const g_sev = mg && mg >= 40 ? 'Severe' : mg && mg >= 20 ? 'Moderate' : 'Mild';
+      const a_sev = ava && ava <= 1 ? 'Severe' : ava && ava <= 1.5 ? 'Moderate' : 'Mild';
+      const di_sev = di && di < 0.25 ? 'Severe' : di && di < 0.5 ? 'Moderate' : 'Mild';
+
+      let scores = { mild: 0, moderate: 0, severe: 0 };
+      if (vmax) { if (vmax >= 4) scores.severe++; else if (vmax >= 3) scores.moderate++; else scores.mild++; }
+      if (mg) { if (mg >= 40) scores.severe++; else if (mg >= 20) scores.moderate++; else scores.mild++; }
+      if (ava) { if (ava <= 1) scores.severe++; else if (ava <= 1.5) scores.moderate++; else scores.mild++; }
+      if (di) { if (di < 0.25) scores.severe++; else if (di < 0.5) scores.moderate++; else scores.mild++; }
+
+      let final = 'Indeterminate';
+      if (scores.severe >= 2) final = 'Severe AS';
+      else if (scores.moderate >= 2) final = 'Moderate AS';
+      else if (scores.mild >= 2) final = 'Mild AS';
+
+      avOut = `
+        Vmax: ${vmax?.toFixed(2) || '-'} m/s (${v_sev})<br>
+        Mean Gradient: ${mg?.toFixed(1) || '-'} mmHg (${g_sev})<br>
+        AVA: ${ava?.toFixed(2) || '-'} cm² (${a_sev})<br>
+        DVI: ${di?.toFixed(2) || '-'} (${di_sev})<br>
+        <b>Final Severity: ${final}</b>
+      `;
+    }
+
+    setResults({ patient: patientOut, lv: lvOut, dia: diaOut, av: avOut });
   };
 
+  
   useEffect(() => {
     calculateAll();
   }, [inputs]);
