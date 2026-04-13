@@ -115,7 +115,16 @@ export default function EchoFreeCalculator() {
       `;
     }
 
-    setResults({ patient: patientOut, lv: lvOut, dia: diaOut, av: avOut });
+        // Mitral Stenosis
+    const pht = v('pht'), mgrad = v('mgrad'), mvplan = v('mvplan');
+    let msOut = '';
+    if (pht || mgrad || mvplan) {
+      const mva = pht ? 220 / pht : mvplan || 0;
+      const sev = (mva < 1 || (mgrad && mgrad >= 10)) ? 'Severe' : (mva < 1.5 || (mgrad && mgrad >= 5)) ? 'Moderate' : 'Mild';
+      msOut = `MVA: ${mva.toFixed(2)}<br><b>${sev}</b>`;
+    }
+
+    setResults({ patient: patientOut, lv: lvOut, dia: diaOut, av: avOut, ms: msOut });
   };
 
 
