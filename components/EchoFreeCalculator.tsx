@@ -118,7 +118,7 @@ export default function EchoFreeCalculator() {
     setResults({ patient: patientOut, lv: lvOut, dia: diaOut, av: avOut });
   };
 
-  
+
   useEffect(() => {
     calculateAll();
   }, [inputs]);
@@ -176,7 +176,7 @@ export default function EchoFreeCalculator() {
         🫀 Free Echo Calculator <span className="text-cyan-400 text-xl font-normal">(manual entry • educational)</span>
       </h1>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         {/* Patient Card - already working */}
         <div className="bg-[#111827] border-2 border-cyan-400 rounded-3xl p-6">
           <div className="flex justify-between items-center mb-4">
@@ -240,7 +240,7 @@ export default function EchoFreeCalculator() {
           {results.dia && <div className="mt-6 bg-green-900/30 border border-green-400 p-5 rounded-2xl text-sm" dangerouslySetInnerHTML={{ __html: results.dia }} />}
         </div>
 
-        {/* Aortic Stenosis Card - already added */}
+        {/* Aortic Stenosis Card - already working */}
         <div className="bg-[#111827] border-2 border-cyan-400 rounded-3xl p-6">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-cyan-300 text-xl">Aortic Stenosis</h3>
@@ -255,6 +255,20 @@ export default function EchoFreeCalculator() {
             <div><div className="text-xs text-cyan-400 mb-1">Planimetry (cm²)</div><input type="number" step="0.1" value={inputs.plan} onChange={e => update('plan', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
           </div>
           {results.av && <div className="mt-6 bg-green-900/30 border border-green-400 p-5 rounded-2xl text-sm" dangerouslySetInnerHTML={{ __html: results.av }} />}
+        </div>
+
+        {/* Mitral Stenosis Card - NEW */}
+        <div className="bg-[#111827] border-2 border-cyan-400 rounded-3xl p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-cyan-300 text-xl">Mitral Stenosis</h3>
+            <button onClick={() => resetCard(['pht','mgrad','mvplan'])} className="px-4 py-1 text-xs bg-blue-600 hover:bg-blue-700 rounded-xl">Reset</button>
+          </div>
+          <div className="grid grid-cols-1 gap-4">
+            <div><div className="text-xs text-cyan-400 mb-1">PHT</div><input type="number" value={inputs.pht} onChange={e => update('pht', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+            <div><div className="text-xs text-cyan-400 mb-1">Mean Grad</div><input type="number" value={inputs.mgrad} onChange={e => update('mgrad', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+            <div><div className="text-xs text-cyan-400 mb-1">Planimetry (cm²)</div><input type="number" value={inputs.mvplan} onChange={e => update('mvplan', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+          </div>
+          {results.ms && <div className="mt-6 bg-green-900/30 border border-green-400 p-5 rounded-2xl text-sm" dangerouslySetInnerHTML={{ __html: results.ms }} />}
         </div>
       </div>
     </div>
