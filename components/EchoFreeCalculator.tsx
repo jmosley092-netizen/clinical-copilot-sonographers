@@ -148,19 +148,20 @@ export default function EchoFreeCalculator() {
       const rvsp = trv && rap ? 4 * Math.pow(trv, 2) + rap : null;
       const mpap = at ? 79 - 0.45 * at : null;
       let sev = '';
-      if (rvsp) {
-        sev = rvsp < 35 ? 'Normal' : rvsp < 45 ? 'Mild PH' : rvsp < 60 ? 'Moderate PH' : 'Severe PH';
-      } else if (mpap) {
-        sev = mpap < 20 ? 'Normal' : mpap < 25 ? 'Borderline' : mpap < 35 ? 'Mild PH' : mpap < 45 ? 'Moderate PH' : 'Severe PH';
-      }
-      phtn1Out = `
-        RVSP: ${rvsp?.toFixed(1) || '-'} mmHg<br>
-        mPAP: ${mpap?.toFixed(1) || '-'} mmHg<br>
-        <b>${sev}</b>
-      `;
+      if (rvsp) sev = rvsp < 35 ? 'Normal' : rvsp < 45 ? 'Mild PH' : rvsp < 60 ? 'Moderate PH' : 'Severe PH';
+      else if (mpap) sev = mpap < 20 ? 'Normal' : mpap < 25 ? 'Borderline' : mpap < 35 ? 'Mild PH' : mpap < 45 ? 'Moderate PH' : 'Severe PH';
+      phtn1Out = `RVSP: ${rvsp?.toFixed(1) || '-'} mmHg<br>mPAP: ${mpap?.toFixed(1) || '-'} mmHg<br><b>${sev}</b>`;
     }
 
-    setResults({ patient: patientOut, lv: lvOut, dia: diaOut, av: avOut, ms: msOut, phtn1: phtn1Out });
+    // PHTN (Confidence) - full logic from your original HTML
+    let score = 0;
+    if (trv && trv >= 2.8) score++;
+    if (v('tapse') && v('tapse')! < 1.7) score++;
+    if (v('pr') && v('pr')! > 2.2) score++;
+    const conf = score >= 2 ? 'High probability PH' : score === 1 ? 'Intermediate' : 'Low';
+    const phtn2Out = `Score: ${score}/3<br><b>${conf}</b>`;
+
+    setResults({ patient: patientOut, lv: lvOut, dia: diaOut, av: avOut, ms: msOut, phtn1: phtn1Out, phtn2: phtn2Out });
   };
 
 
