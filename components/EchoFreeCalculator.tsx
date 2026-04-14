@@ -115,7 +115,7 @@ export default function EchoFreeCalculator() {
       `;
     }
 
-        // Mitral Stenosis
+    // Mitral Stenosis
     const pht = v('pht'), mgrad = v('mgrad'), mvplan = v('mvplan');
     let msOut = '';
     if (pht || mgrad || mvplan) {
@@ -124,7 +124,26 @@ export default function EchoFreeCalculator() {
       msOut = `MVA: ${mva.toFixed(2)}<br><b>${sev}</b>`;
     }
 
-    setResults({ patient: patientOut, lv: lvOut, dia: diaOut, av: avOut, ms: msOut });
+    // PHTN (Pressures) - full logic from your original HTML
+    const trv = v('trv'), rap = v('rap'), at = v('rvotat');
+    let phtn1Out = '';
+    if (trv || at) {
+      const rvsp = trv && rap ? 4 * Math.pow(trv, 2) + rap : null;
+      const mpap = at ? 79 - 0.45 * at : null;
+      let sev = '';
+      if (rvsp) {
+        sev = rvsp < 35 ? 'Normal' : rvsp < 45 ? 'Mild PH' : rvsp < 60 ? 'Moderate PH' : 'Severe PH';
+      } else if (mpap) {
+        sev = mpap < 20 ? 'Normal' : mpap < 25 ? 'Borderline' : mpap < 35 ? 'Mild PH' : mpap < 45 ? 'Moderate PH' : 'Severe PH';
+      }
+      phtn1Out = `
+        RVSP: ${rvsp?.toFixed(1) || '-'} mmHg<br>
+        mPAP: ${mpap?.toFixed(1) || '-'} mmHg<br>
+        <b>${sev}</b>
+      `;
+    }
+
+    setResults({ patient: patientOut, lv: lvOut, dia: diaOut, av: avOut, ms: msOut, phtn1: phtn1Out });
   };
 
 
