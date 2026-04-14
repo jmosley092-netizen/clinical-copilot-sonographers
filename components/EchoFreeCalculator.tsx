@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calculator } from "lucide-react";
 
-export function EchoFreeCalculator() {
+export default function EchoFreeCalculator() {
   const [inputs, setInputs] = useState({
     gender: "", heightCm: "", heightIn: "", weightKg: "", weightLb: "", hr: "",
     ivsd: "", ivss: "", lvidd: "", lvids: "", lvpwd: "", lvpws: "", edv: "", esv: "",
