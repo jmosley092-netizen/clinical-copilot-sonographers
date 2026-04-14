@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { CoPilotHeader } from "@/components/CoPilotHeader";
@@ -13,12 +13,10 @@ export const metadata: Metadata = {
     icon: "/favicon.ico",
     apple: "/logo.png",
   },
+};
+
+export const viewport: Viewport = {
   themeColor: "#0ea5e9",
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "black-translucent",
-    title: "Clinical CoPilot",
-  },
 };
 
 export default function RootLayout({
