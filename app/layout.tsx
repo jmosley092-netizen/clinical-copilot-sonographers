@@ -20,3 +20,20 @@ export const metadata: Metadata = {
     title: "Clinical CoPilot",
   },
 };
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en" className="dark">
+      <body className={inter.className}>
+        <CoPilotHeader />
+        <main className="min-h-screen bg-zinc-950 text-zinc-100">
+          {children}
+        </main>
+      </body>
+    </html>
+  );
+}
