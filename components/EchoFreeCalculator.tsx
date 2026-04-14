@@ -161,7 +161,23 @@ export default function EchoFreeCalculator() {
     const conf = score >= 2 ? 'High probability PH' : score === 1 ? 'Intermediate' : 'Low';
     const phtn2Out = `Score: ${score}/3<br><b>${conf}</b>`;
 
-    setResults({ patient: patientOut, lv: lvOut, dia: diaOut, av: avOut, ms: msOut, phtn1: phtn1Out, phtn2: phtn2Out });
+    // Hemodynamics - final card (SV / SVI / CO) from your original HTML
+    const lvotd_h = v('lvotd');
+    const lvotvti_h = v('lvotvti');
+    const hr_h = v('hr');
+    let hemoOut = '';
+    if (lvotd_h && lvotvti_h) {
+      const sv = 3.14 * Math.pow(lvotd_h / 2, 2) * lvotvti_h;
+      const svi = bsa ? sv / bsa : null;
+      const co = hr_h ? (sv * hr_h) / 1000 : null;
+      hemoOut = `
+        SV: ${sv.toFixed(1)} mL<br>
+        SVI: ${svi?.toFixed(1) || '-'} mL/m²<br>
+        CO: ${co?.toFixed(2) || '-'} L/min
+      `;
+    }
+
+    setResults({ patient: patientOut, lv: lvOut, dia: diaOut, av: avOut, ms: msOut, phtn1: phtn1Out, phtn2: phtn2Out, hemo: hemoOut });
   };
 
 
