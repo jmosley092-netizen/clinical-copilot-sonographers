@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import EchoFreeCalculator from "./EchoFreeCalculator";
 
 const ClinicalTabs: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<"navigator" | "calculator">("navigator");
+  const [activeTab, setActiveTab] = useState<"navigator" | "calculator">("calculator");
 
   const [images, setImages] = useState<File[]>([]);
 
