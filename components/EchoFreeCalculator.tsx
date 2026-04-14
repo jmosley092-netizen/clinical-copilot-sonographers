@@ -115,13 +115,20 @@ export default function EchoFreeCalculator() {
       `;
     }
 
-    // Mitral Stenosis
+        // Mitral Stenosis - improved with standard ASE criteria
     const pht = v('pht'), mgrad = v('mgrad'), mvplan = v('mvplan');
     let msOut = '';
     if (pht || mgrad || mvplan) {
       const mva = pht ? 220 / pht : mvplan || 0;
-      const sev = (mva < 1 || (mgrad && mgrad >= 10)) ? 'Severe' : (mva < 1.5 || (mgrad && mgrad >= 5)) ? 'Moderate' : 'Mild';
-      msOut = `MVA: ${mva.toFixed(2)}<br><b>${sev}</b>`;
+      
+      let sev = 'Mild';
+      if (mva <= 1.0 || (mgrad && mgrad > 10)) {
+        sev = 'Severe';
+      } else if (mva < 1.5 || (mgrad && mgrad >= 5)) {
+        sev = 'Moderate';
+      }
+
+      msOut = `MVA: ${mva.toFixed(2)} cm²<br><b>${sev} MS</b>`;
     }
 
     // PHTN (Pressures) - full logic from your original HTML
