@@ -115,7 +115,7 @@ export default function EchoFreeCalculator() {
       `;
     }
 
-        // Mitral Stenosis - improved with standard ASE criteria
+    // Mitral Stenosis - corrected to match ASE criteria
     const pht = v('pht'), mgrad = v('mgrad'), mvplan = v('mvplan');
     let msOut = '';
     if (pht || mgrad || mvplan) {
