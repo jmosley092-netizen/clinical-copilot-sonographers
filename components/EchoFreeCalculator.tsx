@@ -13,11 +13,14 @@ export default function EchoFreeCalculator() {
     pht: "", mgrad: "", mvplan: "",
     trv: "", rap: "", rvotat: "",
     tapse: "", pr: "",
-    lvotd_h: "", lvotvti_h: ""   // for hemodynamics
+    lvotd_h: "", lvotvti_h: "",
+    // LFLG AS new fields
+    baselineAVA: "", baselineMG: "", svi: "", lvef: "",
+    stressMG: "", stressVmax: "", stressAVA: "", deltaSV: ""
   });
 
   const [results, setResults] = useState({
-    patient: "", lv: "", dia: "", av: "", ms: "", phtn1: "", phtn2: "", hemo: ""
+    patient: "", lv: "", dia: "", av: "", ms: "", phtn1: "", phtn2: "", hemo: "", lflg: ""
   });
 
   const update = (key: string, value: string) => {
@@ -155,7 +158,41 @@ export default function EchoFreeCalculator() {
     const conf = score >= 2 ? 'High probability PH' : score === 1 ? 'Intermediate' : 'Low';
     const phtn2Out = `Score: ${score}/3<br><b>${conf}</b>`;
 
-    setResults({ patient: patientOut, lv: lvOut, dia: diaOut, av: avOut, ms: msOut, phtn1: phtn1Out, phtn2: phtn2Out, hemo: hemoOut });
+    // LFLG AS Logic
+    const baselineAVA = v('baselineAVA');
+    const baselineMG = v('baselineMG');
+    const svi = v('svi');
+    const lvef = v('lvef');
+    const stressMG = v('stressMG');
+    const stressVmax = v('stressVmax');
+    const stressAVA = v('stressAVA');
+    const deltaSV = v('deltaSV');
+
+    let lflgOut = '';
+    if (baselineAVA && baselineMG && svi !== null && lvef !== null) {
+      const isLowFlow = svi <= 35;
+      const isLowGradient = baselineMG < 40;
+      const isSevereAVA = baselineAVA <= 1.0;
+
+      if (isLowFlow && isLowGradient && isSevereAVA) {
+        const isClassical = lvef < 50;
+        const type = isClassical ? "Classical LFLG AS" : "Paradoxical LFLG AS";
+
+        if (stressMG !== null && stressVmax !== null && stressAVA !== null) {
+          let classification = "Indeterminate";
+          if (stressMG >= 40 && stressVmax >= 4 && stressAVA <= 1.0) {
+            classification = "True Severe AS";
+          } else if (stressAVA > 1.0) {
+            classification = "Pseudo-Severe AS";
+          }
+          lflgOut = `<b>${type}</b><br>DSE Result: ${classification}<br>Stress MG: ${stressMG} mmHg | Stress Vmax: ${stressVmax} m/s | Stress AVA: ${stressAVA} cm²`;
+        } else {
+          lflgOut = `<b>${type}</b><br>Low-dose DSE recommended to differentiate true vs pseudo-severe AS`;
+        }
+      }
+    }
+
+    setResults({ patient: patientOut, lv: lvOut, dia: diaOut, av: avOut, ms: msOut, phtn1: phtn1Out, phtn2: phtn2Out, hemo: hemoOut, lflg: lflgOut });
   };
 
   useEffect(() => {
@@ -266,6 +303,24 @@ export default function EchoFreeCalculator() {
             {results.hemo && <div className="mt-6 bg-green-900/30 border border-green-400 p-5 rounded-2xl text-sm" dangerouslySetInnerHTML={{ __html: results.hemo }} />}
           </div>
 
+          {/* New LFLG AS Card - placed after Hemodynamics */}
+          <div className="bg-[#111827] border-2 border-cyan-400 rounded-3xl p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-cyan-300 text-xl">Low-Flow Low-Gradient AS</h3>
+              <button onClick={() => resetCard(['baselineAVA','baselineMG','svi','lvef','stressMG','stressVmax','stressAVA','deltaSV'])} className="px-4 py-1 text-xs bg-blue-600 hover:bg-blue-700 rounded-xl">Reset</button>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div><div className="text-xs text-cyan-400 mb-1">Baseline AVA (cm²)</div><input type="number" step="0.1" inputMode="decimal" value={inputs.baselineAVA} onChange={e => update('baselineAVA', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+              <div><div className="text-xs text-cyan-400 mb-1">Baseline MG (mmHg)</div><input type="number" step="0.1" inputMode="decimal" value={inputs.baselineMG} onChange={e => update('baselineMG', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+              <div><div className="text-xs text-cyan-400 mb-1">SVi (mL/m²)</div><input type="number" step="0.1" inputMode="decimal" value={inputs.svi} onChange={e => update('svi', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+              <div><div className="text-xs text-cyan-400 mb-1">LVEF (%)</div><input type="number" inputMode="decimal" value={inputs.lvef} onChange={e => update('lvef', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+              <div><div className="text-xs text-cyan-400 mb-1">DSE Stress MG (mmHg)</div><input type="number" step="0.1" inputMode="decimal" value={inputs.stressMG} onChange={e => update('stressMG', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+              <div><div className="text-xs text-cyan-400 mb-1">DSE Stress Vmax (m/s)</div><input type="number" step="0.1" inputMode="decimal" value={inputs.stressVmax} onChange={e => update('stressVmax', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+              <div><div className="text-xs text-cyan-400 mb-1">DSE Stress AVA (cm²)</div><input type="number" step="0.1" inputMode="decimal" value={inputs.stressAVA} onChange={e => update('stressAVA', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+            </div>
+            {results.lflg && <div className="mt-6 bg-green-900/30 border border-green-400 p-5 rounded-2xl text-sm" dangerouslySetInnerHTML={{ __html: results.lflg }} />}
+          </div>
+
           {/* Mitral Stenosis */}
           <div className="bg-[#111827] border-2 border-cyan-400 rounded-3xl p-6">
             <div className="flex justify-between items-center mb-4">
@@ -306,6 +361,7 @@ export default function EchoFreeCalculator() {
             </div>
             {results.phtn2 && <div className="mt-6 bg-green-900/30 border border-green-400 p-5 rounded-2xl text-sm" dangerouslySetInnerHTML={{ __html: results.phtn2 }} />}
           </div>
+          
         </div>
       </CardContent>
     </Card>
