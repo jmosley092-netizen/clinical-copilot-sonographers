@@ -1,28 +1,44 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Calculator } from "lucide-react";
 
-export default function EchoFreeCalculator() {
+export function EchoFreeCalculator() {
   const [inputs, setInputs] = useState({
-    gender: '' as '' | 'male' | 'female',
-    heightCm: '', heightIn: '', weightKg: '', weightLb: '', hr: '',
-    ivsd: '', ivss: '', lvidd: '', lvids: '', lvpwd: '', lvpws: '', edv: '', esv: '',
-    E: '', A: '', es: '', el: '', lavi: '', ivrt: '', sd: '', lars: '',
-    vmax: '', mg: '', lvotd: '', lvotvti: '', avvti: '', plan: '',
-    pht: '', mgrad: '', mvplan: '',
-    trv: '', rap: '', rvotat: '',
-    tapse: '', pr: '',
+    gender: "", heightCm: "", heightIn: "", weightKg: "", weightLb: "", hr: "",
+    ivsd: "", ivss: "", lvidd: "", lvids: "", lvpwd: "", lvpws: "", edv: "", esv: "",
+    E: "", A: "", es: "", el: "", lavi: "", ivrt: "", sd: "", lars: "",
+    vmax: "", mg: "", lvotd: "", lvotvti: "", avvti: "", plan: "",
+    pht: "", mgrad: "", mvplan: "",
+    trv: "", rap: "", rvotat: "",
+    tapse: "", pr: "",
+    lvotd_h: "", lvotvti_h: ""   // for hemodynamics
   });
 
-  const [results, setResults] = useState<any>({});
+  const [results, setResults] = useState({
+    patient: "", lv: "", dia: "", av: "", ms: "", phtn1: "", phtn2: "", hemo: ""
+  });
 
-  const v = (key: keyof typeof inputs) => {
-    const val = inputs[key];
-    return val === '' ? null : parseFloat(val as string);
+  const update = (key: string, value: string) => {
+    setInputs(prev => ({ ...prev, [key]: value }));
   };
 
-  const calculateBSA = (cm: number | null, kg: number | null) => 
-    cm && kg ? Math.sqrt((cm * kg) / 3600) : null;
+  const resetCard = (fields: string[]) => {
+    const newInputs = { ...inputs };
+    fields.forEach(f => { newInputs[f as keyof typeof inputs] = ""; });
+    setInputs(newInputs);
+  };
+
+  const v = (key: string) => {
+    const val = inputs[key as keyof typeof inputs];
+    return val ? parseFloat(val) : null;
+  };
+
+  const calculateBSA = (cm: number | null, kg: number | null) => {
+    if (!cm || !kg) return null;
+    return Math.sqrt((cm * kg) / 3600);
+  };
 
   const calculateAll = () => {
     const bsa = calculateBSA(v('heightCm'), v('weightKg'));
@@ -46,23 +62,12 @@ export default function EchoFreeCalculator() {
 
       const normal = gender === 'female' ? 95 : 115;
       if (lvmi && rwt !== null) {
-        geometry = lvmi < normal
-          ? (rwt > 0.42 ? 'Concentric Remodeling' : 'Normal Geometry')
-          : (rwt > 0.42 ? 'Concentric Hypertrophy' : 'Eccentric Hypertrophy');
-        severity = gender === 'male'
-          ? (lvmi < 116 ? 'Normal' : lvmi < 131 ? 'Mild LVH' : lvmi < 148 ? 'Moderate LVH' : 'Severe LVH')
-          : (lvmi < 96 ? 'Normal' : lvmi < 109 ? 'Mild LVH' : lvmi < 122 ? 'Moderate LVH' : 'Severe LVH');
+        geometry = lvmi < normal ? (rwt > 0.42 ? 'Concentric Remodeling' : 'Normal Geometry') : (rwt > 0.42 ? 'Concentric Hypertrophy' : 'Eccentric Hypertrophy');
+        severity = gender === 'male' ? (lvmi < 116 ? 'Normal' : lvmi < 131 ? 'Mild LVH' : lvmi < 148 ? 'Moderate LVH' : 'Severe LVH') : (lvmi < 96 ? 'Normal' : lvmi < 109 ? 'Mild LVH' : lvmi < 122 ? 'Moderate LVH' : 'Severe LVH');
       }
     }
 
-    const lvOut = `
-      EF: ${ef?.toFixed(1) || '-'} %<br>
-      FS: ${fs?.toFixed(1) || '-'} %<br>
-      RWT: ${rwt?.toFixed(2) || '-'}<br>
-      LVMI: ${lvmi?.toFixed(1) || '-'} g/m²<br>
-      <b>${geometry}</b><br>
-      <b>${severity}</b>
-    `;
+    const lvOut = `EF: ${ef?.toFixed(1) || '-'} %<br>FS: ${fs?.toFixed(1) || '-'} %<br>RWT: ${rwt?.toFixed(2) || '-'}<br>LVMI: ${lvmi?.toFixed(1) || '-'} g/m²<br><b>${geometry}</b><br><b>${severity}</b>`;
 
     // Diastology
     const E = v('E'), A = v('A'), es = v('es'), el = v('el'), lavi = v('lavi');
@@ -106,42 +111,31 @@ export default function EchoFreeCalculator() {
       else if (scores.moderate >= 2) final = 'Moderate AS';
       else if (scores.mild >= 2) final = 'Mild AS';
 
-      avOut = `
-        Vmax: ${vmax?.toFixed(2) || '-'} m/s (${v_sev})<br>
-        Mean Gradient: ${mg?.toFixed(1) || '-'} mmHg (${g_sev})<br>
-        AVA: ${ava?.toFixed(2) || '-'} cm² (${a_sev})<br>
-        DVI: ${di?.toFixed(2) || '-'} (${di_sev})<br>
-        <b>Final Severity: ${final}</b>
-      `;
+      avOut = `Vmax: ${vmax?.toFixed(2) || '-'} m/s (${v_sev})<br>Mean Gradient: ${mg?.toFixed(1) || '-'} mmHg (${g_sev})<br>AVA: ${ava?.toFixed(2) || '-'} cm² (${a_sev})<br>DVI: ${di?.toFixed(2) || '-'} (${di_sev})<br><b>Final Severity: ${final}</b>`;
     }
 
-        // Mitral Stenosis - improved ASE criteria
+    // Hemodynamics
+    const lvotd_h = v('lvotd'), lvotvti_h = v('lvotvti'), hr = v('hr');
+    let hemoOut = '';
+    if (lvotd_h && lvotvti_h) {
+      const sv = 3.14 * Math.pow(lvotd_h / 2, 2) * lvotvti_h;
+      const svi = bsa ? sv / bsa : null;
+      const co = hr ? (sv * hr) / 1000 : null;
+      hemoOut = `SV: ${sv.toFixed(1)} mL<br>SVI: ${svi?.toFixed(1) || '-'} mL/m²<br>CO: ${co?.toFixed(2) || '-'} L/min`;
+    }
+
+    // Mitral Stenosis
     const pht = v('pht'), mgrad = v('mgrad'), mvplan = v('mvplan');
     let msOut = '';
     if (pht || mgrad || mvplan) {
       const mva = pht ? 220 / pht : mvplan || 0;
-      
-      let sev = '';
-      let note = '';
-
-      if (mva > 0) {
-        // Primary: Use MVA when available
-        if (mva <= 1.0) sev = 'Severe';
-        else if (mva < 1.5) sev = 'Moderate';
-        else if (mva < 2.0) sev = 'Mild to Moderate';
-        else sev = 'Mild';
-      } else if (mgrad) {
-        // Secondary: Use mean gradient only when no MVA
-        if (mgrad > 10) sev = 'Severe';
-        else if (mgrad >= 5) sev = 'Moderate';
-        else sev = 'Mild';
-        note = '<br><small>(MVA not entered - using gradient only)</small>';
-      }
-
-      msOut = `MVA: ${mva > 0 ? mva.toFixed(2) : '-'} cm²<br><b>${sev} MS</b>${note}`;
+      let sev = 'Mild';
+      if (mva <= 1.0 || (mgrad && mgrad > 10)) sev = 'Severe';
+      else if (mva < 1.5 || (mgrad && mgrad >= 5)) sev = 'Moderate';
+      msOut = `MVA: ${mva.toFixed(2)} cm²<br><b>${sev} MS</b>`;
     }
 
-    // PHTN (Pressures) - full logic from your original HTML
+    // PHTN Pressures
     const trv = v('trv'), rap = v('rap'), at = v('rvotat');
     let phtn1Out = '';
     if (trv || at) {
@@ -153,7 +147,7 @@ export default function EchoFreeCalculator() {
       phtn1Out = `RVSP: ${rvsp?.toFixed(1) || '-'} mmHg<br>mPAP: ${mpap?.toFixed(1) || '-'} mmHg<br><b>${sev}</b>`;
     }
 
-    // PHTN (Confidence) - full logic from your original HTML
+    // PHTN Confidence
     let score = 0;
     if (trv && trv >= 2.8) score++;
     if (v('tapse') && v('tapse')! < 1.7) score++;
@@ -161,218 +155,159 @@ export default function EchoFreeCalculator() {
     const conf = score >= 2 ? 'High probability PH' : score === 1 ? 'Intermediate' : 'Low';
     const phtn2Out = `Score: ${score}/3<br><b>${conf}</b>`;
 
-    // Hemodynamics - final card (SV / SVI / CO) from your original HTML
-    const lvotd_h = v('lvotd');
-    const lvotvti_h = v('lvotvti');
-    const hr_h = v('hr');
-    let hemoOut = '';
-    if (lvotd_h && lvotvti_h) {
-      const sv = 3.14 * Math.pow(lvotd_h / 2, 2) * lvotvti_h;
-      const svi = bsa ? sv / bsa : null;
-      const co = hr_h ? (sv * hr_h) / 1000 : null;
-      hemoOut = `
-        SV: ${sv.toFixed(1)} mL<br>
-        SVI: ${svi?.toFixed(1) || '-'} mL/m²<br>
-        CO: ${co?.toFixed(2) || '-'} L/min
-      `;
-    }
-
     setResults({ patient: patientOut, lv: lvOut, dia: diaOut, av: avOut, ms: msOut, phtn1: phtn1Out, phtn2: phtn2Out, hemo: hemoOut });
   };
-
 
   useEffect(() => {
     calculateAll();
   }, [inputs]);
 
-  // Dedicated update functions to prevent input fighting
-  const updateHeightCm = (value: string) => {
-    setInputs(prev => ({
-      ...prev,
-      heightCm: value,
-      heightIn: value ? (parseFloat(value) / 2.54).toFixed(1) : ''
-    }));
-  };
-
-  const updateHeightIn = (value: string) => {
-    setInputs(prev => ({
-      ...prev,
-      heightIn: value,
-      heightCm: value ? (parseFloat(value) * 2.54).toFixed(1) : ''
-    }));
-  };
-
-  const updateWeightKg = (value: string) => {
-    setInputs(prev => ({
-      ...prev,
-      weightKg: value,
-      weightLb: value ? (parseFloat(value) * 2.20462).toFixed(1) : ''
-    }));
-  };
-
-  const updateWeightLb = (value: string) => {
-    setInputs(prev => ({
-      ...prev,
-      weightLb: value,
-      weightKg: value ? (parseFloat(value) / 2.20462).toFixed(1) : ''
-    }));
-  };
-
-  const update = (key: keyof typeof inputs, value: any) => {
-    if (key === 'heightCm') return updateHeightCm(value);
-    if (key === 'heightIn') return updateHeightIn(value);
-    if (key === 'weightKg') return updateWeightKg(value);
-    if (key === 'weightLb') return updateWeightLb(value);
-    setInputs(prev => ({ ...prev, [key]: value }));
-  };
-
-  const resetCard = (fields: string[]) => {
-    const newInputs = { ...inputs };
-    fields.forEach(f => { newInputs[f as keyof typeof inputs] = ''; });
-    setInputs(newInputs);
-  };
-
   return (
-    <div className="max-w-7xl mx-auto p-6 bg-[#0a0a0a] text-white">
-      <h1 className="text-4xl font-bold mb-8 flex items-center gap-3">
-        🫀 Free Echo Calculator <span className="text-cyan-400 text-xl font-normal">(manual entry • educational)</span>
-      </h1>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-        {/* Patient Card - already working */}
-        <div className="bg-[#111827] border-2 border-cyan-400 rounded-3xl p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-cyan-300 text-xl">Patient</h3>
-            <button onClick={() => resetCard(['gender','heightCm','heightIn','weightKg','weightLb','hr'])} className="px-4 py-1 text-xs bg-blue-600 hover:bg-blue-700 rounded-xl">Reset</button>
-          </div>
-          <div className="space-y-4">
-            <select value={inputs.gender} onChange={e => update('gender', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3 text-white">
-              <option value="">Select Gender</option>
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-            </select>
-            <div className="grid grid-cols-2 gap-3">
-              <div><div className="text-xs text-cyan-400 mb-1">Height (cm)</div><input type="number" value={inputs.heightCm} onChange={e => update('heightCm', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
-              <div><div className="text-xs text-cyan-400 mb-1">Height (in)</div><input type="number" value={inputs.heightIn} onChange={e => update('heightIn', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+    <Card className="border-zinc-700 bg-zinc-900">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-emerald-400">
+          <Calculator className="w-6 h-6" />
+          Echo Calculator
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="p-0">
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 p-6">
+          {/* Patient Card */}
+          <div className="bg-[#111827] border-2 border-cyan-400 rounded-3xl p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-cyan-300 text-xl">Patient</h3>
+              <button onClick={() => resetCard(['gender','heightCm','heightIn','weightKg','weightLb','hr'])} className="px-4 py-1 text-xs bg-blue-600 hover:bg-blue-700 rounded-xl">Reset</button>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div><div className="text-xs text-cyan-400 mb-1">Weight (kg)</div><input type="number" value={inputs.weightKg} onChange={e => update('weightKg', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
-              <div><div className="text-xs text-cyan-400 mb-1">Weight (lb)</div><input type="number" value={inputs.weightLb} onChange={e => update('weightLb', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+            <div className="space-y-4">
+              <select value={inputs.gender} onChange={e => update('gender', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3 text-white">
+                <option value="">Select Gender</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+              </select>
+              {/* height / weight fields with inputMode */}
+              <div className="grid grid-cols-2 gap-3">
+                <div><div className="text-xs text-cyan-400 mb-1">Height (cm)</div><input type="number" inputMode="decimal" value={inputs.heightCm} onChange={e => update('heightCm', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+                <div><div className="text-xs text-cyan-400 mb-1">Height (in)</div><input type="number" inputMode="decimal" value={inputs.heightIn} onChange={e => update('heightIn', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div><div className="text-xs text-cyan-400 mb-1">Weight (kg)</div><input type="number" inputMode="decimal" value={inputs.weightKg} onChange={e => update('weightKg', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+                <div><div className="text-xs text-cyan-400 mb-1">Weight (lb)</div><input type="number" inputMode="decimal" value={inputs.weightLb} onChange={e => update('weightLb', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+              </div>
+              <div><div className="text-xs text-cyan-400 mb-1">Heart Rate (bpm)</div><input type="number" inputMode="decimal" value={inputs.hr} onChange={e => update('hr', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+              {results.patient && <div className="bg-green-900/30 border border-green-400 p-4 rounded-2xl text-center font-semibold text-green-400">{results.patient}</div>}
             </div>
-            <div><div className="text-xs text-cyan-400 mb-1">Heart Rate (bpm)</div><input type="number" value={inputs.hr} onChange={e => update('hr', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
-            {results.patient && <div className="bg-green-900/30 border border-green-400 p-4 rounded-2xl text-center font-semibold text-green-400">{results.patient}</div>}
           </div>
-        </div>
 
-        {/* LV Geometry & Function - already working */}
-        <div className="bg-[#111827] border-2 border-cyan-400 rounded-3xl p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-cyan-300 text-xl">LV Geometry &amp; Function</h3>
-            <button onClick={() => resetCard(['ivsd','ivss','lvidd','lvids','lvpwd','lvpws','edv','esv'])} className="px-4 py-1 text-xs bg-blue-600 hover:bg-blue-700 rounded-xl">Reset</button>
+          {/* LV Geometry & Function */}
+          <div className="bg-[#111827] border-2 border-cyan-400 rounded-3xl p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-cyan-300 text-xl">LV Geometry &amp; Function</h3>
+              <button onClick={() => resetCard(['ivsd','ivss','lvidd','lvids','lvpwd','lvpws','edv','esv'])} className="px-4 py-1 text-xs bg-blue-600 hover:bg-blue-700 rounded-xl">Reset</button>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div><div className="text-xs text-cyan-400 mb-1">IVSd (cm)</div><input type="number" step="0.1" inputMode="decimal" value={inputs.ivsd} onChange={e => update('ivsd', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+              <div><div className="text-xs text-cyan-400 mb-1">IVSs (cm)</div><input type="number" step="0.1" inputMode="decimal" value={inputs.ivss} onChange={e => update('ivss', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+              <div><div className="text-xs text-cyan-400 mb-1">LVIDd (cm)</div><input type="number" step="0.1" inputMode="decimal" value={inputs.lvidd} onChange={e => update('lvidd', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+              <div><div className="text-xs text-cyan-400 mb-1">LVIDs (cm)</div><input type="number" step="0.1" inputMode="decimal" value={inputs.lvids} onChange={e => update('lvids', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+              <div><div className="text-xs text-cyan-400 mb-1">LVPWd (cm)</div><input type="number" step="0.1" inputMode="decimal" value={inputs.lvpwd} onChange={e => update('lvpwd', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+              <div><div className="text-xs text-cyan-400 mb-1">LVPWs (cm)</div><input type="number" step="0.1" inputMode="decimal" value={inputs.lvpws} onChange={e => update('lvpws', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+              <div><div className="text-xs text-cyan-400 mb-1">EDV (mL)</div><input type="number" inputMode="decimal" value={inputs.edv} onChange={e => update('edv', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+              <div><div className="text-xs text-cyan-400 mb-1">ESV (mL)</div><input type="number" inputMode="decimal" value={inputs.esv} onChange={e => update('esv', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+            </div>
+            {results.lv && <div className="mt-6 bg-green-900/30 border border-green-400 p-5 rounded-2xl text-sm leading-relaxed" dangerouslySetInnerHTML={{ __html: results.lv }} />}
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div><div className="text-xs text-cyan-400 mb-1">IVSd (cm)</div><input type="number" step="0.1" value={inputs.ivsd} onChange={e => update('ivsd', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
-            <div><div className="text-xs text-cyan-400 mb-1">IVSs (cm)</div><input type="number" step="0.1" value={inputs.ivss} onChange={e => update('ivss', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
-            <div><div className="text-xs text-cyan-400 mb-1">LVIDd (cm)</div><input type="number" step="0.1" value={inputs.lvidd} onChange={e => update('lvidd', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
-            <div><div className="text-xs text-cyan-400 mb-1">LVIDs (cm)</div><input type="number" step="0.1" value={inputs.lvids} onChange={e => update('lvids', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
-            <div><div className="text-xs text-cyan-400 mb-1">LVPWd (cm)</div><input type="number" step="0.1" value={inputs.lvpwd} onChange={e => update('lvpwd', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
-            <div><div className="text-xs text-cyan-400 mb-1">LVPWs (cm)</div><input type="number" step="0.1" value={inputs.lvpws} onChange={e => update('lvpws', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
-            <div><div className="text-xs text-cyan-400 mb-1">EDV (mL)</div><input type="number" value={inputs.edv} onChange={e => update('edv', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
-            <div><div className="text-xs text-cyan-400 mb-1">ESV (mL)</div><input type="number" value={inputs.esv} onChange={e => update('esv', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
-          </div>
-          {results.lv && <div className="mt-6 bg-green-900/30 border border-green-400 p-5 rounded-2xl text-sm leading-relaxed" dangerouslySetInnerHTML={{ __html: results.lv }} />}
-        </div>
 
-        {/* Diastology Card - already working */}
-        <div className="bg-[#111827] border-2 border-cyan-400 rounded-3xl p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-cyan-300 text-xl">Diastology</h3>
-            <button onClick={() => resetCard(['E','A','es','el','lavi','ivrt','sd','lars'])} className="px-4 py-1 text-xs bg-blue-600 hover:bg-blue-700 rounded-xl">Reset</button>
+          {/* Diastology - updated labels + units */}
+          <div className="bg-[#111827] border-2 border-cyan-400 rounded-3xl p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-cyan-300 text-xl">Diastology</h3>
+              <button onClick={() => resetCard(['E','A','es','el','lavi','ivrt','sd','lars'])} className="px-4 py-1 text-xs bg-blue-600 hover:bg-blue-700 rounded-xl">Reset</button>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div><div className="text-xs text-cyan-400 mb-1">E (cm/s)</div><input type="number" inputMode="decimal" value={inputs.E} onChange={e => update('E', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+              <div><div className="text-xs text-cyan-400 mb-1">A (cm/s)</div><input type="number" inputMode="decimal" value={inputs.A} onChange={e => update('A', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+              <div><div className="text-xs text-cyan-400 mb-1">e' septal (cm/s)</div><input type="number" inputMode="decimal" value={inputs.es} onChange={e => update('es', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+              <div><div className="text-xs text-cyan-400 mb-1">e' lateral (cm/s)</div><input type="number" inputMode="decimal" value={inputs.el} onChange={e => update('el', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+              <div><div className="text-xs text-cyan-400 mb-1">Left Atrial Volume Index (mL/m²)</div><input type="number" inputMode="decimal" value={inputs.lavi} onChange={e => update('lavi', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+              <div><div className="text-xs text-cyan-400 mb-1">Isovolumic Relaxation Time (ms)</div><input type="number" inputMode="decimal" value={inputs.ivrt} onChange={e => update('ivrt', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+              <div><div className="text-xs text-cyan-400 mb-1">S/D</div><input type="number" inputMode="decimal" value={inputs.sd} onChange={e => update('sd', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+              <div><div className="text-xs text-cyan-400 mb-1">Left Atrial Reservoir Strain (%)</div><input type="number" inputMode="decimal" value={inputs.lars} onChange={e => update('lars', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+            </div>
+            {results.dia && <div className="mt-6 bg-green-900/30 border border-green-400 p-5 rounded-2xl text-sm" dangerouslySetInnerHTML={{ __html: results.dia }} />}
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div><div className="text-xs text-cyan-400 mb-1">E</div><input type="number" value={inputs.E} onChange={e => update('E', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
-            <div><div className="text-xs text-cyan-400 mb-1">A</div><input type="number" value={inputs.A} onChange={e => update('A', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
-            <div><div className="text-xs text-cyan-400 mb-1">e' septal</div><input type="number" value={inputs.es} onChange={e => update('es', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
-            <div><div className="text-xs text-cyan-400 mb-1">e' lateral</div><input type="number" value={inputs.el} onChange={e => update('el', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
-            <div><div className="text-xs text-cyan-400 mb-1">LAVI</div><input type="number" value={inputs.lavi} onChange={e => update('lavi', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
-            <div><div className="text-xs text-cyan-400 mb-1">IVRT</div><input type="number" value={inputs.ivrt} onChange={e => update('ivrt', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
-            <div><div className="text-xs text-cyan-400 mb-1">S/D</div><input type="number" value={inputs.sd} onChange={e => update('sd', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
-            <div><div className="text-xs text-cyan-400 mb-1">LARS</div><input type="number" value={inputs.lars} onChange={e => update('lars', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
-          </div>
-          {results.dia && <div className="mt-6 bg-green-900/30 border border-green-400 p-5 rounded-2xl text-sm" dangerouslySetInnerHTML={{ __html: results.dia }} />}
-        </div>
 
-        {/* Aortic Stenosis Card - already working */}
-        <div className="bg-[#111827] border-2 border-cyan-400 rounded-3xl p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-cyan-300 text-xl">Aortic Stenosis</h3>
-            <button onClick={() => resetCard(['vmax','mg','lvotd','lvotvti','avvti','plan'])} className="px-4 py-1 text-xs bg-blue-600 hover:bg-blue-700 rounded-xl">Reset</button>
+          {/* Aortic Stenosis */}
+          <div className="bg-[#111827] border-2 border-cyan-400 rounded-3xl p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-cyan-300 text-xl">Aortic Stenosis</h3>
+              <button onClick={() => resetCard(['vmax','mg','lvotd','lvotvti','avvti','plan'])} className="px-4 py-1 text-xs bg-blue-600 hover:bg-blue-700 rounded-xl">Reset</button>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div><div className="text-xs text-cyan-400 mb-1">Vmax (m/s)</div><input type="number" step="0.1" inputMode="decimal" value={inputs.vmax} onChange={e => update('vmax', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+              <div><div className="text-xs text-cyan-400 mb-1">Mean Grad (mmHg)</div><input type="number" step="0.1" inputMode="decimal" value={inputs.mg} onChange={e => update('mg', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+              <div><div className="text-xs text-cyan-400 mb-1">LVOT (cm)</div><input type="number" step="0.1" inputMode="decimal" value={inputs.lvotd} onChange={e => update('lvotd', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+              <div><div className="text-xs text-cyan-400 mb-1">LVOT VTI (cm)</div><input type="number" step="0.1" inputMode="decimal" value={inputs.lvotvti} onChange={e => update('lvotvti', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+              <div><div className="text-xs text-cyan-400 mb-1">AV VTI (cm)</div><input type="number" step="0.1" inputMode="decimal" value={inputs.avvti} onChange={e => update('avvti', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+              <div><div className="text-xs text-cyan-400 mb-1">Planimetry (cm²)</div><input type="number" step="0.1" inputMode="decimal" value={inputs.plan} onChange={e => update('plan', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+            </div>
+            {results.av && <div className="mt-6 bg-green-900/30 border border-green-400 p-5 rounded-2xl text-sm" dangerouslySetInnerHTML={{ __html: results.av }} />}
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div><div className="text-xs text-cyan-400 mb-1">Vmax (m/s)</div><input type="number" step="0.1" value={inputs.vmax} onChange={e => update('vmax', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
-            <div><div className="text-xs text-cyan-400 mb-1">Mean Grad (mmHg)</div><input type="number" step="0.1" value={inputs.mg} onChange={e => update('mg', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
-            <div><div className="text-xs text-cyan-400 mb-1">LVOT (cm)</div><input type="number" step="0.1" value={inputs.lvotd} onChange={e => update('lvotd', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
-            <div><div className="text-xs text-cyan-400 mb-1">LVOT VTI (cm)</div><input type="number" step="0.1" value={inputs.lvotvti} onChange={e => update('lvotvti', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
-            <div><div className="text-xs text-cyan-400 mb-1">AV VTI (cm)</div><input type="number" step="0.1" value={inputs.avvti} onChange={e => update('avvti', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
-            <div><div className="text-xs text-cyan-400 mb-1">Planimetry (cm²)</div><input type="number" step="0.1" value={inputs.plan} onChange={e => update('plan', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
-          </div>
-          {results.av && <div className="mt-6 bg-green-900/30 border border-green-400 p-5 rounded-2xl text-sm" dangerouslySetInnerHTML={{ __html: results.av }} />}
-        </div>
 
-        {/* Mitral Stenosis Card - already working */}
-        <div className="bg-[#111827] border-2 border-cyan-400 rounded-3xl p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-cyan-300 text-xl">Mitral Stenosis</h3>
-            <button onClick={() => resetCard(['pht','mgrad','mvplan'])} className="px-4 py-1 text-xs bg-blue-600 hover:bg-blue-700 rounded-xl">Reset</button>
+          {/* Hemodynamics - moved here */}
+          <div className="bg-[#111827] border-2 border-cyan-400 rounded-3xl p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-cyan-300 text-xl">Hemodynamics</h3>
+              <button onClick={() => resetCard(['lvotd','lvotvti'])} className="px-4 py-1 text-xs bg-blue-600 hover:bg-blue-700 rounded-xl">Reset</button>
+            </div>
+            <div className="grid grid-cols-1 gap-4">
+              <div><div className="text-xs text-cyan-400 mb-1">LVOT (cm)</div><input type="number" step="0.1" inputMode="decimal" value={inputs.lvotd} onChange={e => update('lvotd', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+              <div><div className="text-xs text-cyan-400 mb-1">LVOT VTI (cm)</div><input type="number" step="0.1" inputMode="decimal" value={inputs.lvotvti} onChange={e => update('lvotvti', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+            </div>
+            {results.hemo && <div className="mt-6 bg-green-900/30 border border-green-400 p-5 rounded-2xl text-sm" dangerouslySetInnerHTML={{ __html: results.hemo }} />}
           </div>
-          <div className="grid grid-cols-1 gap-4">
-            <div><div className="text-xs text-cyan-400 mb-1">PHT</div><input type="number" value={inputs.pht} onChange={e => update('pht', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
-            <div><div className="text-xs text-cyan-400 mb-1">Mean Grad</div><input type="number" value={inputs.mgrad} onChange={e => update('mgrad', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
-            <div><div className="text-xs text-cyan-400 mb-1">Planimetry (cm²)</div><input type="number" value={inputs.mvplan} onChange={e => update('mvplan', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
-          </div>
-          {results.ms && <div className="mt-6 bg-green-900/30 border border-green-400 p-5 rounded-2xl text-sm" dangerouslySetInnerHTML={{ __html: results.ms }} />}
-        </div>
 
-        {/* PHTN (Pressures) Card - already working */}
-        <div className="bg-[#111827] border-2 border-cyan-400 rounded-3xl p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-cyan-300 text-xl">PHTN (Pressures)</h3>
-            <button onClick={() => resetCard(['trv','rap','rvotat'])} className="px-4 py-1 text-xs bg-blue-600 hover:bg-blue-700 rounded-xl">Reset</button>
+          {/* Mitral Stenosis */}
+          <div className="bg-[#111827] border-2 border-cyan-400 rounded-3xl p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-cyan-300 text-xl">Mitral Stenosis</h3>
+              <button onClick={() => resetCard(['pht','mgrad','mvplan'])} className="px-4 py-1 text-xs bg-blue-600 hover:bg-blue-700 rounded-xl">Reset</button>
+            </div>
+            <div className="grid grid-cols-1 gap-4">
+              <div><div className="text-xs text-cyan-400 mb-1">PHT (ms)</div><input type="number" inputMode="decimal" value={inputs.pht} onChange={e => update('pht', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+              <div><div className="text-xs text-cyan-400 mb-1">Mean Grad (mmHg)</div><input type="number" inputMode="decimal" value={inputs.mgrad} onChange={e => update('mgrad', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+              <div><div className="text-xs text-cyan-400 mb-1">Planimetry (cm²)</div><input type="number" step="0.1" inputMode="decimal" value={inputs.mvplan} onChange={e => update('mvplan', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+            </div>
+            {results.ms && <div className="mt-6 bg-green-900/30 border border-green-400 p-5 rounded-2xl text-sm" dangerouslySetInnerHTML={{ __html: results.ms }} />}
           </div>
-          <div className="grid grid-cols-1 gap-4">
-            <div><div className="text-xs text-cyan-400 mb-1">TR Vmax (m/s)</div><input type="number" step="0.1" value={inputs.trv} onChange={e => update('trv', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
-            <div><div className="text-xs text-cyan-400 mb-1">RAP (mmHg)</div><input type="number" value={inputs.rap} onChange={e => update('rap', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
-            <div><div className="text-xs text-cyan-400 mb-1">RVOT AT (ms)</div><input type="number" value={inputs.rvotat} onChange={e => update('rvotat', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
-          </div>
-          {results.phtn1 && <div className="mt-6 bg-green-900/30 border border-green-400 p-5 rounded-2xl text-sm" dangerouslySetInnerHTML={{ __html: results.phtn1 }} />}
-        </div>
 
-        {/* PHTN (Confidence) Card - already working */}
-        <div className="bg-[#111827] border-2 border-cyan-400 rounded-3xl p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-cyan-300 text-xl">PHTN (Confidence)</h3>
-            <button onClick={() => resetCard(['tapse','pr'])} className="px-4 py-1 text-xs bg-blue-600 hover:bg-blue-700 rounded-xl">Reset</button>
+          {/* PHTN Pressures */}
+          <div className="bg-[#111827] border-2 border-cyan-400 rounded-3xl p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-cyan-300 text-xl">PHTN (Pressures)</h3>
+              <button onClick={() => resetCard(['trv','rap','rvotat'])} className="px-4 py-1 text-xs bg-blue-600 hover:bg-blue-700 rounded-xl">Reset</button>
+            </div>
+            <div className="grid grid-cols-1 gap-4">
+              <div><div className="text-xs text-cyan-400 mb-1">TR Vmax (m/s)</div><input type="number" step="0.1" inputMode="decimal" value={inputs.trv} onChange={e => update('trv', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+              <div><div className="text-xs text-cyan-400 mb-1">RAP (mmHg)</div><input type="number" inputMode="decimal" value={inputs.rap} onChange={e => update('rap', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+              <div><div className="text-xs text-cyan-400 mb-1">RVOT AT (ms)</div><input type="number" inputMode="decimal" value={inputs.rvotat} onChange={e => update('rvotat', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+            </div>
+            {results.phtn1 && <div className="mt-6 bg-green-900/30 border border-green-400 p-5 rounded-2xl text-sm" dangerouslySetInnerHTML={{ __html: results.phtn1 }} />}
           </div>
-          <div className="grid grid-cols-1 gap-4">
-            <div><div className="text-xs text-cyan-400 mb-1">TAPSE (cm)</div><input type="number" step="0.1" value={inputs.tapse} onChange={e => update('tapse', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
-            <div><div className="text-xs text-cyan-400 mb-1">PR EDV (m/s)</div><input type="number" step="0.1" value={inputs.pr} onChange={e => update('pr', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
-          </div>
-          {results.phtn2 && <div className="mt-6 bg-green-900/30 border border-green-400 p-5 rounded-2xl text-sm" dangerouslySetInnerHTML={{ __html: results.phtn2 }} />}
-        </div>
 
-        {/* Hemodynamics Card - NEW (final card) */}
-        <div className="bg-[#111827] border-2 border-cyan-400 rounded-3xl p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-cyan-300 text-xl">Hemodynamics</h3>
-            <button onClick={() => resetCard(['lvotd','lvotvti'])} className="px-4 py-1 text-xs bg-blue-600 hover:bg-blue-700 rounded-xl">Reset</button>
+          {/* PHTN Confidence */}
+          <div className="bg-[#111827] border-2 border-cyan-400 rounded-3xl p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-cyan-300 text-xl">PHTN (Confidence)</h3>
+              <button onClick={() => resetCard(['tapse','pr'])} className="px-4 py-1 text-xs bg-blue-600 hover:bg-blue-700 rounded-xl">Reset</button>
+            </div>
+            <div className="grid grid-cols-1 gap-4">
+              <div><div className="text-xs text-cyan-400 mb-1">TAPSE (cm)</div><input type="number" step="0.1" inputMode="decimal" value={inputs.tapse} onChange={e => update('tapse', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+              <div><div className="text-xs text-cyan-400 mb-1">PR EDV (m/s)</div><input type="number" step="0.1" inputMode="decimal" value={inputs.pr} onChange={e => update('pr', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+            </div>
+            {results.phtn2 && <div className="mt-6 bg-green-900/30 border border-green-400 p-5 rounded-2xl text-sm" dangerouslySetInnerHTML={{ __html: results.phtn2 }} />}
           </div>
-          <div className="grid grid-cols-1 gap-4">
-            <div><div className="text-xs text-cyan-400 mb-1">LVOT (cm)</div><input type="number" step="0.1" value={inputs.lvotd} onChange={e => update('lvotd', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
-            <div><div className="text-xs text-cyan-400 mb-1">LVOT VTI (cm)</div><input type="number" step="0.1" value={inputs.lvotvti} onChange={e => update('lvotvti', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
-          </div>
-          {results.hemo && <div className="mt-6 bg-green-900/30 border border-green-400 p-5 rounded-2xl text-sm" dangerouslySetInnerHTML={{ __html: results.hemo }} />}
         </div>
-      </div>  
-    </div>
+      </CardContent>
+    </Card>
   );
 }
