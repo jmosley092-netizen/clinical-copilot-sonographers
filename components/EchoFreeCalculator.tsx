@@ -15,11 +15,15 @@ export default function EchoFreeCalculator() {
     tapse: "", pr: "",
     // LFLG AS fields
     baselineAVA: "", baselineMG: "", baselineSVi: "", baselineLVEF: "",
-    dseAVA: "", dseMG: "", dseVmax: "", deltaSVPercent: ""
+    dseAVA: "", dseMG: "", dseVmax: "", deltaSVPercent: "",
+    // Mitral Regurgitation (Abbott MitraClip protocol)
+    vcWidth: "", eroA: "", regurgVol: "", regurgFraction: "", jetAreaLA: "",
+    pisaRadius: "", aliasingVel: "", mrVTI: "", mvaPlanimetry: "", meanPGForward: "",
+    mvMorphology: "", jetOrigin: "", pvFlowReversal: ""
   });
 
   const [results, setResults] = useState({
-    patient: "", lv: "", dia: "", av: "", ms: "", phtn1: "", phtn2: "", hemo: "", lflg: ""
+    patient: "", lv: "", dia: "", av: "", ms: "", phtn1: "", phtn2: "", hemo: "", lflg: "", mr: ""
   });
 
   // === BIDIRECTIONAL UNIT CONVERSION (fixed) ===
@@ -55,9 +59,7 @@ export default function EchoFreeCalculator() {
     }));
   };
 
-  const update = (key: string, value: string) => {
-    setInputs(prev => ({ ...prev, [key]: value }));
-  };
+  const update = (key: string, value: string) => setInputs(prev => ({ ...prev, [key]: value }));
 
   const resetCard = (fields: string[]) => {
     const newInputs = { ...inputs };
@@ -233,14 +235,53 @@ export default function EchoFreeCalculator() {
           DSE: AVA ${dseAVA || '-'} cm² | MG ${dseMG || '-'} mmHg | Vmax ${dseVmax || '-'} m/s
         `;
       }
+    // ==================== MITRAL REGURGITATION (Abbott MitraClip) ====================
+    const vcWidth = v('vcWidth');
+    const eroA = v('eroA');
+    const regurgVol = v('regurgVol');
+    const regurgFraction = v('regurgFraction');
+    const jetAreaLA = v('jetAreaLA');
+    const pisaRadius = v('pisaRadius');
+    const aliasingVel = v('aliasingVel');
+    const mrVTI = v('mrVTI');
+    const mvaPlanimetry = v('mvaPlanimetry');
+    const meanPGForward = v('meanPGForward');
+
+    let mrOut = '';
+    let calculatedEROA = null;
+
+    // Auto-calculate EROA from PISA
+    if (pisaRadius && aliasingVel && mrVTI) {
+      calculatedEROA = (2 * Math.PI * Math.pow(pisaRadius, 2) * aliasingVel) / mrVTI;
     }
 
-    setResults({ patient: patientOut, lv: lvOut, dia: diaOut, av: avOut, ms: msOut, phtn1: phtn1Out, phtn2: phtn2Out, hemo: hemoOut, lflg: lflgOut });
+    const finalEROA = eroA || calculatedEROA;
+
+    if (finalEROA || vcWidth || regurgVol || regurgFraction) {
+      let severity = 'Mild';
+      if (finalEROA && finalEROA >= 0.4 || regurgVol && regurgVol >= 60 || regurgFraction && regurgFraction >= 50) {
+        severity = 'Severe';
+      } else if (finalEROA && finalEROA >= 0.2 || regurgVol && regurgVol >= 30 || regurgFraction && regurgFraction >= 30) {
+        severity = 'Moderate';
+      }
+
+      mrOut = `
+        <b>Mitral Regurgitation (Abbott MitraClip Screening)</b><br><br>
+        Vena Contracta: ${vcWidth?.toFixed(2) || '-'} cm<br>
+        EROA: ${finalEROA ? finalEROA.toFixed(2) : '-'} cm² ${calculatedEROA ? '(PISA calc)' : ''}<br>
+        Regurgitant Volume: ${regurgVol?.toFixed(1) || '-'} mL<br>
+        Regurgitant Fraction: ${regurgFraction?.toFixed(1) || '-'} %<br>
+        Jet Area / LA Area: ${jetAreaLA?.toFixed(1) || '-'} %<br>
+        Forward Mean PG: ${meanPGForward?.toFixed(1) || '-'} mmHg<br>
+        MVA Planimetry: ${mvaPlanimetry?.toFixed(2) || '-'} cm²<br>
+        <b>${severity} MR</b>
+      `;
+    }
+
+    setResults({ patient: patientOut, lv: lvOut, dia: diaOut, av: avOut, ms: msOut, phtn1: phtn1Out, phtn2: phtn2Out, hemo: hemoOut, lflg: lflgOut, mr: mrOut });
   };
 
-  useEffect(() => {
-    calculateAll();
-  }, [inputs]);
+  useEffect(() => { calculateAll(); }, [inputs]);
 
   return (
     <Card className="border-zinc-700 bg-zinc-900">
@@ -420,8 +461,41 @@ export default function EchoFreeCalculator() {
             {results.phtn2 && <div className="mt-6 bg-green-900/30 border border-green-400 p-5 rounded-2xl text-sm" dangerouslySetInnerHTML={{ __html: results.phtn2 }} />}
           </div>
 
+{/* New Abbott MitraClip Mitral Regurgitation Card */}
+          <div className="bg-[#111827] border-2 border-cyan-400 rounded-3xl p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-cyan-300 text-xl">Mitral Regurgitation (Abbott MitraClip Screening)</h3>
+              <button onClick={() => resetCard(['vcWidth','eroA','regurgVol','regurgFraction','jetAreaLA','pisaRadius','aliasingVel','mrVTI','mvaPlanimetry','meanPGForward','mvMorphology','jetOrigin','pvFlowReversal'])} className="px-4 py-1 text-xs bg-blue-600 hover:bg-blue-700 rounded-xl">Reset</button>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div><div className="text-xs text-cyan-400 mb-1">Jet Origin</div>
+                <select value={inputs.jetOrigin} onChange={e => update('jetOrigin', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3 text-white">
+                  <option value="">Select</option>
+                  <option value="A1P1">A1/P1</option>
+                  <option value="A2P2">A2/P2</option>
+                  <option value="A3P3">A3/P3</option>
+                </select>
+              </div>
+              <div><div className="text-xs text-cyan-400 mb-1">MV Morphology</div>
+                <select value={inputs.mvMorphology} onChange={e => update('mvMorphology', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3 text-white">
+                  <option value="">Select</option>
+                  <option value="primary">Primary / Degenerative</option>
+                  <option value="secondary">Secondary / Functional</option>
+                  <option value="flail">Flail Leaflet</option>
+                  <option value="prolapse">Prolapse</option>
+                </select>
+              </div>
+              <div><div className="text-xs text-cyan-400 mb-1">Vena Contracta (cm)</div><input type="number" step="0.1" inputMode="decimal" value={inputs.vcWidth} onChange={e => update('vcWidth', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+              <div><div className="text-xs text-cyan-400 mb-1">PISA Radius (cm)</div><input type="number" step="0.1" inputMode="decimal" value={inputs.pisaRadius} onChange={e => update('pisaRadius', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+              <div><div className="text-xs text-cyan-400 mb-1">Aliasing Velocity (cm/s)</div><input type="number" step="0.1" inputMode="decimal" value={inputs.aliasingVel} onChange={e => update('aliasingVel', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+              <div><div className="text-xs text-cyan-400 mb-1">MR VTI (cm)</div><input type="number" step="0.1" inputMode="decimal" value={inputs.mrVTI} onChange={e => update('mrVTI', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+              <div><div className="text-xs text-cyan-400 mb-1">MVA Planimetry (cm²)</div><input type="number" step="0.1" inputMode="decimal" value={inputs.mvaPlanimetry} onChange={e => update('mvaPlanimetry', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+              <div><div className="text-xs text-cyan-400 mb-1">Forward Mean PG (mmHg)</div><input type="number" step="0.1" inputMode="decimal" value={inputs.meanPGForward} onChange={e => update('meanPGForward', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+            </div>
+            {results.mr && <div className="mt-6 bg-green-900/30 border border-green-400 p-5 rounded-2xl text-sm" dangerouslySetInnerHTML={{ __html: results.mr }} />}
+          </div>
         </div>
       </CardContent>
     </Card>
   );
-}
+}}
