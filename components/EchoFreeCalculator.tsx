@@ -187,7 +187,7 @@ export default function EchoFreeCalculator() {
                  DVI: ${di?.toFixed(2) || '-'} (${di_sev})<br>
                  <b>Final Severity: ${final}</b>`;
 
-        // Prosthetic / TAVR Evaluation (now shows whenever checkbox is checked)
+              // Prosthetic / TAVR Evaluation (now shows whenever checkbox is checked)
         if (isProsthetic) {
           let tavrNote = '<br><b>TAVR / Prosthetic Evaluation:</b><br>';
           
@@ -204,7 +204,16 @@ export default function EchoFreeCalculator() {
           if (jetContour) {
             tavrNote += `Jet Contour: ${jetContour} → ${jetContour === 'rounded' ? '❌ Suggests stenosis' : '✅ Normal flow'}<br>`;
           }
-          
+
+          // === NEW: EOA and EOAi (only when Prosthetic checkbox is checked) ===
+          if (ava !== null && bsa) {
+            const eoai = ava / bsa;
+            tavrNote += `EOA: ${ava.toFixed(2)} cm²<br>`;
+            tavrNote += `EOAi: ${eoai.toFixed(2)} cm²/m²<br>`;
+          } else if (ava !== null) {
+            tavrNote += `EOA: ${ava.toFixed(2)} cm²<br>`;
+          }
+
           if (vmax && vmax <= 3) {
             tavrNote += '<b>Overall: Normal functioning prosthetic valve</b>';
           }
