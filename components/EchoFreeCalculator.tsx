@@ -4,8 +4,38 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calculator } from "lucide-react";
 
+// Define the shape of our inputs
+interface CalculatorInputs {
+  gender: string;
+  heightCm: string;
+  heightIn: string;
+  weightKg: string;
+  weightLb: string;
+  hr: string;
+  ivsd: string; ivss: string; lvidd: string; lvids: string;
+  lvpwd: string; lvpws: string; edv: string; esv: string;
+  E: string; A: string; es: string; el: string; lavi: string;
+  ivrt: string; sd: string; lars: string;
+  vmax: string; mg: string; lvotd: string; lvotvti: string;
+  avvti: string; plan: string;
+  pht: string; mgrad: string; mvplan: string;
+  trv: string; rap: string; rvotat: string;
+  tapse: string; pr: string;
+  // LFLG AS
+  baselineAVA: string; baselineMG: string; baselineSVi: string; baselineLVEF: string;
+  dseAVA: string; dseMG: string; dseVmax: string; deltaSVPercent: string;
+  // Abbott MitraClip MR
+  vcWidth: string; eroA: string; regurgVol: string; regurgFraction: string;
+  jetAreaLA: string; pisaRadius: string; aliasingVel: string; mrVTI: string;
+  mvaPlanimetry: string; meanPGForward: string;
+  mvMorphology: string; jetOrigin: string; pvFlowReversal: string;
+  // TAVR / Prosthetic
+  isProsthetic: boolean;
+  avAT: string; jetContour: string;
+}
+
 export default function EchoFreeCalculator() {
-  const [inputs, setInputs] = useState({
+  const [inputs, setInputs] = useState<CalculatorInputs>({
     gender: "", heightCm: "", heightIn: "", weightKg: "", weightLb: "", hr: "",
     ivsd: "", ivss: "", lvidd: "", lvids: "", lvpwd: "", lvpws: "", edv: "", esv: "",
     E: "", A: "", es: "", el: "", lavi: "", ivrt: "", sd: "", lars: "",
@@ -13,20 +43,20 @@ export default function EchoFreeCalculator() {
     pht: "", mgrad: "", mvplan: "",
     trv: "", rap: "", rvotat: "",
     tapse: "", pr: "",
-    // LFLG AS
     baselineAVA: "", baselineMG: "", baselineSVi: "", baselineLVEF: "",
     dseAVA: "", dseMG: "", dseVmax: "", deltaSVPercent: "",
-    // Abbott MitraClip MR
     vcWidth: "", eroA: "", regurgVol: "", regurgFraction: "", jetAreaLA: "",
     pisaRadius: "", aliasingVel: "", mrVTI: "", mvaPlanimetry: "", meanPGForward: "",
-    mvMorphology: "", jetOrigin: "", pvFlowReversal: ""
+    mvMorphology: "", jetOrigin: "", pvFlowReversal: "",
+    isProsthetic: false,
+    avAT: "", jetContour: ""
   });
 
   const [results, setResults] = useState({
     patient: "", lv: "", dia: "", av: "", ms: "", phtn1: "", phtn2: "", hemo: "", lflg: "", mr: ""
   });
 
-  // === FIXED BIDIRECTIONAL UNIT CONVERSION ===
+  // Fixed bidirectional unit conversion
   const updateHeightCm = (value: string) => {
     setInputs(prev => ({
       ...prev,
@@ -59,19 +89,26 @@ export default function EchoFreeCalculator() {
     }));
   };
 
-  const update = (key: string, value: string) => {
+  const update = (key: keyof CalculatorInputs, value: string | boolean) => {
     setInputs(prev => ({ ...prev, [key]: value }));
   };
 
-  const resetCard = (fields: string[]) => {
-    const newInputs = { ...inputs };
-    fields.forEach(f => { newInputs[f as keyof typeof inputs] = ""; });
-    setInputs(newInputs);
+  const resetCard = (fields: (keyof CalculatorInputs)[]) => {
+    setInputs(prev => {
+      const newInputs = { ...prev };
+      fields.forEach(f => {
+        if (f === 'isProsthetic') {
+          newInputs[f] = false;
+        } else {
+          (newInputs as any)[f] = "";
+        }
+      });
+      return newInputs;
+    });
   };
-
-  const v = (key: string) => {
-    const val = inputs[key as keyof typeof inputs];
-    return val ? parseFloat(val) : null;
+  const v = (key: keyof CalculatorInputs) => {
+    const val = inputs[key];
+    return typeof val === "string" && val ? parseFloat(val) : null;
   };
 
   const calculateBSA = (cm: number | null, kg: number | null) => {
@@ -117,8 +154,12 @@ export default function EchoFreeCalculator() {
       diaOut = `${grade}<br>LA Size: ${laSize}<br>LA Pressure: ${lap}<br><br>E/A: ${ratio.toFixed(2)}<br>E/e' septal: ${(E/es).toFixed(1)}<br>E/e' lateral: ${(E/el).toFixed(1)}<br>E/e' avg: ${(E/eavg).toFixed(1)}`;
     }
 
-    // Aortic Stenosis
+    // Aortic Stenosis + TAVR/Prosthetic
     const vmax = v('vmax'), mg = v('mg'), lvotd = v('lvotd'), lvotvti = v('lvotvti'), avvti = v('avvti');
+    const avAT = v('avAT');
+    const jetContour = inputs.jetContour;
+    const isProsthetic = inputs.isProsthetic;
+
     let avOut = '';
     if (vmax || mg) {
       const ava = lvotd && lvotvti && avvti ? (3.14 * Math.pow(lvotd / 2, 2) * lvotvti) / avvti : null;
@@ -127,16 +168,35 @@ export default function EchoFreeCalculator() {
       const g_sev = mg && mg >= 40 ? 'Severe' : mg && mg >= 20 ? 'Moderate' : 'Mild';
       const a_sev = ava && ava <= 1 ? 'Severe' : ava && ava <= 1.5 ? 'Moderate' : 'Mild';
       const di_sev = di && di < 0.25 ? 'Severe' : di && di < 0.5 ? 'Moderate' : 'Mild';
+
       let scores = { mild: 0, moderate: 0, severe: 0 };
       if (vmax) { if (vmax >= 4) scores.severe++; else if (vmax >= 3) scores.moderate++; else scores.mild++; }
       if (mg) { if (mg >= 40) scores.severe++; else if (mg >= 20) scores.moderate++; else scores.mild++; }
       if (ava) { if (ava <= 1) scores.severe++; else if (ava <= 1.5) scores.moderate++; else scores.mild++; }
       if (di) { if (di < 0.25) scores.severe++; else if (di < 0.5) scores.moderate++; else scores.mild++; }
+
       let final = 'Indeterminate';
       if (scores.severe >= 2) final = 'Severe AS';
       else if (scores.moderate >= 2) final = 'Moderate AS';
       else if (scores.mild >= 2) final = 'Mild AS';
+
       avOut = `Vmax: ${vmax?.toFixed(2) || '-'} m/s (${v_sev})<br>Mean Gradient: ${mg?.toFixed(1) || '-'} mmHg (${g_sev})<br>AVA: ${ava?.toFixed(2) || '-'} cm² (${a_sev})<br>DVI: ${di?.toFixed(2) || '-'} (${di_sev})<br><b>Final Severity: ${final}</b>`;
+
+      if (isProsthetic && vmax && vmax > 3) {
+        let tavrNote = '<br><b>TAVR/Prosthetic Evaluation:</b><br>';
+        if (di !== null) {
+          if (di >= 0.30) tavrNote += 'DVI ≥0.30 → Normal PrAV<br>';
+          else if (di >= 0.25) tavrNote += 'DVI 0.25–0.29 → Possible PPM or mild stenosis<br>';
+          else tavrNote += 'DVI <0.25 → Suggests PrAV Stenosis<br>';
+        }
+        if (avAT !== null) {
+          tavrNote += `AT ${avAT} ms → ${avAT > 100 ? 'Suggests PrAV Stenosis' : 'Normal PrAV'}<br>`;
+        }
+        if (jetContour) {
+          tavrNote += `Jet Contour: ${jetContour} → ${jetContour === 'rounded' ? 'Suggests stenosis' : 'Normal flow'}<br>`;
+        }
+        avOut += tavrNote;
+      }
     }
 
     // Hemodynamics
@@ -161,11 +221,11 @@ export default function EchoFreeCalculator() {
     }
 
     // PHTN Pressures
-    const trv = v('trv'), rap = v('rap'), at = v('rvotat');
+    const trv = v('trv'), rap = v('rap'), rvotat = v('rvotat');
     let phtn1Out = '';
-    if (trv || at) {
+    if (trv || rvotat) {
       const rvsp = trv && rap ? 4 * Math.pow(trv, 2) + rap : null;
-      const mpap = at ? 79 - 0.45 * at : null;
+      const mpap = rvotat ? 79 - 0.45 * rvotat : null;
       let sev = '';
       if (rvsp) sev = rvsp < 35 ? 'Normal' : rvsp < 45 ? 'Mild PH' : rvsp < 60 ? 'Moderate PH' : 'Severe PH';
       else if (mpap) sev = mpap < 20 ? 'Normal' : mpap < 25 ? 'Borderline' : mpap < 35 ? 'Mild PH' : mpap < 45 ? 'Moderate PH' : 'Severe PH';
@@ -180,7 +240,7 @@ export default function EchoFreeCalculator() {
     const conf = score >= 2 ? 'High probability PH' : score === 1 ? 'Intermediate' : 'Low';
     const phtn2Out = `Score: ${score}/3<br><b>${conf}</b>`;
 
-    // LFLG AS (reworked with contractile reserve)
+    // LFLG AS
     const baselineAVA = v('baselineAVA'), baselineMG = v('baselineMG'), baselineSVi = v('baselineSVi'), baselineLVEF = v('baselineLVEF');
     const dseAVA = v('dseAVA'), dseMG = v('dseMG'), dseVmax = v('dseVmax'), deltaSVPercent = v('deltaSVPercent');
     let lflgOut = '';
@@ -233,7 +293,7 @@ export default function EchoFreeCalculator() {
       </CardHeader>
       <CardContent className="p-0">
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 p-6">
-          {/* Patient Card - fixed conversion */}
+          {/* Patient Card */}
           <div className="bg-[#111827] border-2 border-cyan-400 rounded-3xl p-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-cyan-300 text-xl">Patient</h3>
@@ -296,11 +356,15 @@ export default function EchoFreeCalculator() {
             {results.dia && <div className="mt-6 bg-green-900/30 border border-green-400 p-5 rounded-2xl text-sm" dangerouslySetInnerHTML={{ __html: results.dia }} />}
           </div>
 
-          {/* Aortic Stenosis */}
+          {/* Aortic Stenosis + TAVR/Prosthetic */}
           <div className="bg-[#111827] border-2 border-cyan-400 rounded-3xl p-6">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-cyan-300 text-xl">Aortic Stenosis</h3>
-              <button onClick={() => resetCard(['vmax','mg','lvotd','lvotvti','avvti','plan'])} className="px-4 py-1 text-xs bg-blue-600 hover:bg-blue-700 rounded-xl">Reset</button>
+              <h3 className="text-cyan-300 text-xl">Aortic Stenosis / TAVR Follow-up</h3>
+              <button onClick={() => resetCard(['vmax','mg','lvotd','lvotvti','avvti','plan','avAT','jetContour'])} className="px-4 py-1 text-xs bg-blue-600 hover:bg-blue-700 rounded-xl">Reset</button>
+            </div>
+            <div className="flex items-center gap-2 mb-4">
+              <input type="checkbox" checked={inputs.isProsthetic} onChange={e => update('isProsthetic', e.target.checked)} />
+              <span className="text-sm text-cyan-400">Prosthetic Valve / TAVR</span>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div><div className="text-xs text-cyan-400 mb-1">Vmax (m/s)</div><input type="number" step="0.1" inputMode="decimal" value={inputs.vmax} onChange={e => update('vmax', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
@@ -309,6 +373,18 @@ export default function EchoFreeCalculator() {
               <div><div className="text-xs text-cyan-400 mb-1">LVOT VTI (cm)</div><input type="number" step="0.1" inputMode="decimal" value={inputs.lvotvti} onChange={e => update('lvotvti', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
               <div><div className="text-xs text-cyan-400 mb-1">AV VTI (cm)</div><input type="number" step="0.1" inputMode="decimal" value={inputs.avvti} onChange={e => update('avvti', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
               <div><div className="text-xs text-cyan-400 mb-1">Planimetry (cm²)</div><input type="number" step="0.1" inputMode="decimal" value={inputs.plan} onChange={e => update('plan', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+              {inputs.isProsthetic && (
+                <>
+                  <div><div className="text-xs text-cyan-400 mb-1">Acceleration Time (ms)</div><input type="number" inputMode="decimal" value={inputs.avAT} onChange={e => update('avAT', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+                  <div><div className="text-xs text-cyan-400 mb-1">Jet Contour</div>
+                    <select value={inputs.jetContour} onChange={e => update('jetContour', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3 text-white">
+                      <option value="">Select</option>
+                      <option value="rounded">Rounded (suggests stenosis)</option>
+                      <option value="blunted">Blunted (normal flow)</option>
+                    </select>
+                  </div>
+                </>
+              )}
             </div>
             {results.av && <div className="mt-6 bg-green-900/30 border border-green-400 p-5 rounded-2xl text-sm" dangerouslySetInnerHTML={{ __html: results.av }} />}
           </div>
