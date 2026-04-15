@@ -475,8 +475,8 @@ export default function EchoFreeCalculator() {
               <div><div className="text-xs text-cyan-400 mb-1">DSE AVA (cm²)</div><input type="number" step="0.1" inputMode="decimal" value={inputs.dseAVA} onChange={e => update('dseAVA', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
               <div><div className="text-xs text-cyan-400 mb-1">DSE MG (mmHg)</div><input type="number" step="0.1" inputMode="decimal" value={inputs.dseMG} onChange={e => update('dseMG', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
               
-              <div><div className="text-xs text-cyan-400 mb-1">DSE Vmax (m/s)</div><input type="number" step="0.1" inputMode="decimal" value={inputs.dseVmax} onChange={e => update('dseVmax', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
               <div><div className="text-xs text-cyan-400 mb-1">DSE SVI (mL/m²)</div><input type="number" step="0.1" inputMode="decimal" value={inputs.dseSVi} onChange={e => update('dseSVi', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+              <div><div className="text-xs text-cyan-400 mb-1">DSE Vmax (m/s)</div><input type="number" step="0.1" inputMode="decimal" value={inputs.dseVmax} onChange={e => update('dseVmax', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
             </div>
 
             {results.lflg && (
