@@ -16,7 +16,7 @@ export default function EchoFreeCalculator() {
     // LFLG AS
     baselineAVA: "", baselineMG: "", baselineSVi: "", baselineLVEF: "",
     dseAVA: "", dseMG: "", dseVmax: "", deltaSVPercent: "",
-    // Mitral Regurgitation (Abbott MitraClip protocol)
+    // Abbott MitraClip MR
     vcWidth: "", eroA: "", regurgVol: "", regurgFraction: "", jetAreaLA: "",
     pisaRadius: "", aliasingVel: "", mrVTI: "", mvaPlanimetry: "", meanPGForward: "",
     mvMorphology: "", jetOrigin: "", pvFlowReversal: ""
@@ -26,7 +26,7 @@ export default function EchoFreeCalculator() {
     patient: "", lv: "", dia: "", av: "", ms: "", phtn1: "", phtn2: "", hemo: "", lflg: "", mr: ""
   });
 
-  // === BIDIRECTIONAL UNIT CONVERSION (fixed) ===
+  // === FIXED BIDIRECTIONAL UNIT CONVERSION ===
   const updateHeightCm = (value: string) => {
     setInputs(prev => ({
       ...prev,
@@ -59,7 +59,9 @@ export default function EchoFreeCalculator() {
     }));
   };
 
-  const update = (key: string, value: string) => setInputs(prev => ({ ...prev, [key]: value }));
+  const update = (key: string, value: string) => {
+    setInputs(prev => ({ ...prev, [key]: value }));
+  };
 
   const resetCard = (fields: string[]) => {
     const newInputs = { ...inputs };
@@ -72,8 +74,13 @@ export default function EchoFreeCalculator() {
     return val ? parseFloat(val) : null;
   };
 
+  const calculateBSA = (cm: number | null, kg: number | null) => {
+    if (!cm || !kg) return null;
+    return Math.sqrt((cm * kg) / 3600);
+  };
+
   const calculateAll = () => {
-    const bsa = v('heightCm') && v('weightKg') ? Math.sqrt((v('heightCm')! * v('weightKg')!) / 3600) : null;
+    const bsa = calculateBSA(v('heightCm'), v('weightKg'));
     const gender = inputs.gender;
 
     // Patient
@@ -84,21 +91,18 @@ export default function EchoFreeCalculator() {
     const edv = v('edv'), esv = v('esv');
     let ef = null, fs = null, rwt = null, mass = null, lvmi = null;
     let geometry = '', severity = '';
-
     if (lvidd) {
       ef = edv && esv ? ((edv - esv) / edv) * 100 : null;
       fs = lvids ? ((lvidd - lvids) / lvidd) * 100 : null;
       rwt = lvpwd ? (2 * lvpwd) / lvidd : null;
       mass = ivsd && lvpwd ? 0.8 * 1.04 * Math.pow((ivsd + lvidd + lvpwd), 3) - Math.pow(lvidd, 3) + 0.6 : null;
       lvmi = mass && bsa ? mass / bsa : null;
-
       const normal = gender === 'female' ? 95 : 115;
       if (lvmi && rwt !== null) {
         geometry = lvmi < normal ? (rwt > 0.42 ? 'Concentric Remodeling' : 'Normal Geometry') : (rwt > 0.42 ? 'Concentric Hypertrophy' : 'Eccentric Hypertrophy');
         severity = gender === 'male' ? (lvmi < 116 ? 'Normal' : lvmi < 131 ? 'Mild LVH' : lvmi < 148 ? 'Moderate LVH' : 'Severe LVH') : (lvmi < 96 ? 'Normal' : lvmi < 109 ? 'Mild LVH' : lvmi < 122 ? 'Moderate LVH' : 'Severe LVH');
       }
     }
-
     const lvOut = `EF: ${ef?.toFixed(1) || '-'} %<br>FS: ${fs?.toFixed(1) || '-'} %<br>RWT: ${rwt?.toFixed(2) || '-'}<br>LVMI: ${lvmi?.toFixed(1) || '-'} g/m²<br><b>${geometry}</b><br><b>${severity}</b>`;
 
     // Diastology
@@ -110,15 +114,7 @@ export default function EchoFreeCalculator() {
       const grade = ratio < 0.8 ? 'Grade I' : ratio <= 2 ? 'Grade II' : 'Grade III';
       const laSize = lavi && lavi < 34 ? 'Normal' : lavi && lavi < 42 ? 'Mild' : lavi && lavi < 48 ? 'Moderate' : 'Severe';
       const lap = grade === 'Grade I' ? 'Normal LAP' : grade === 'Grade II' ? 'Mildly to moderately elevated LAP' : 'Markedly elevated LAP';
-      diaOut = `
-        ${grade}<br>
-        LA Size: ${laSize}<br>
-        LA Pressure: ${lap}<br><br>
-        E/A: ${ratio.toFixed(2)}<br>
-        E/e' septal: ${(E/es).toFixed(1)}<br>
-        E/e' lateral: ${(E/el).toFixed(1)}<br>
-        E/e' avg: ${(E/eavg).toFixed(1)}
-      `;
+      diaOut = `${grade}<br>LA Size: ${laSize}<br>LA Pressure: ${lap}<br><br>E/A: ${ratio.toFixed(2)}<br>E/e' septal: ${(E/es).toFixed(1)}<br>E/e' lateral: ${(E/el).toFixed(1)}<br>E/e' avg: ${(E/eavg).toFixed(1)}`;
     }
 
     // Aortic Stenosis
@@ -131,18 +127,15 @@ export default function EchoFreeCalculator() {
       const g_sev = mg && mg >= 40 ? 'Severe' : mg && mg >= 20 ? 'Moderate' : 'Mild';
       const a_sev = ava && ava <= 1 ? 'Severe' : ava && ava <= 1.5 ? 'Moderate' : 'Mild';
       const di_sev = di && di < 0.25 ? 'Severe' : di && di < 0.5 ? 'Moderate' : 'Mild';
-
       let scores = { mild: 0, moderate: 0, severe: 0 };
       if (vmax) { if (vmax >= 4) scores.severe++; else if (vmax >= 3) scores.moderate++; else scores.mild++; }
       if (mg) { if (mg >= 40) scores.severe++; else if (mg >= 20) scores.moderate++; else scores.mild++; }
       if (ava) { if (ava <= 1) scores.severe++; else if (ava <= 1.5) scores.moderate++; else scores.mild++; }
       if (di) { if (di < 0.25) scores.severe++; else if (di < 0.5) scores.moderate++; else scores.mild++; }
-
       let final = 'Indeterminate';
       if (scores.severe >= 2) final = 'Severe AS';
       else if (scores.moderate >= 2) final = 'Moderate AS';
       else if (scores.mild >= 2) final = 'Mild AS';
-
       avOut = `Vmax: ${vmax?.toFixed(2) || '-'} m/s (${v_sev})<br>Mean Gradient: ${mg?.toFixed(1) || '-'} mmHg (${g_sev})<br>AVA: ${ava?.toFixed(2) || '-'} cm² (${a_sev})<br>DVI: ${di?.toFixed(2) || '-'} (${di_sev})<br><b>Final Severity: ${final}</b>`;
     }
 
@@ -187,90 +180,42 @@ export default function EchoFreeCalculator() {
     const conf = score >= 2 ? 'High probability PH' : score === 1 ? 'Intermediate' : 'Low';
     const phtn2Out = `Score: ${score}/3<br><b>${conf}</b>`;
 
-    // ==================== LFLG AS LOGIC (reworked) ====================
-    const baselineAVA = v('baselineAVA');
-    const baselineMG = v('baselineMG');
-    const baselineSVi = v('baselineSVi');
-    const baselineLVEF = v('baselineLVEF');
-    const dseAVA = v('dseAVA');
-    const dseMG = v('dseMG');
-    const dseVmax = v('dseVmax');
-    const deltaSVPercent = v('deltaSVPercent');
-
+    // LFLG AS (reworked with contractile reserve)
+    const baselineAVA = v('baselineAVA'), baselineMG = v('baselineMG'), baselineSVi = v('baselineSVi'), baselineLVEF = v('baselineLVEF');
+    const dseAVA = v('dseAVA'), dseMG = v('dseMG'), dseVmax = v('dseVmax'), deltaSVPercent = v('deltaSVPercent');
     let lflgOut = '';
     if (baselineAVA && baselineMG && baselineSVi !== null && baselineLVEF !== null) {
       const isLowFlow = baselineSVi <= 35;
       const isLowGradient = baselineMG < 40;
       const isSevereAVA = baselineAVA <= 1.0;
       const isReducedEF = baselineLVEF < 50;
-
       if (isLowFlow && isLowGradient && isSevereAVA) {
         const type = isReducedEF ? "Classical LFLG AS" : "Paradoxical LFLG AS";
-
         let contractileReserve = "Unknown";
         let classification = "Indeterminate";
-
-        if (deltaSVPercent !== null) {
-          contractileReserve = deltaSVPercent >= 20 ? "Present (≥20% ↑ SV)" : "Absent (<20% ↑ SV)";
-        }
-
+        if (deltaSVPercent !== null) contractileReserve = deltaSVPercent >= 20 ? "Present (≥20% ↑ SV)" : "Absent (<20% ↑ SV)";
         if (dseAVA !== null && dseMG !== null && dseVmax !== null) {
-          if (dseAVA <= 1.0 && (dseMG >= 40 || dseVmax >= 4)) {
-            classification = "True Severe AS";
-          } else if (dseAVA > 1.0) {
-            classification = "Pseudo-Severe AS";
-          }
+          if (dseAVA <= 1.0 && (dseMG >= 40 || dseVmax >= 4)) classification = "True Severe AS";
+          else if (dseAVA > 1.0) classification = "Pseudo-Severe AS";
         }
-
-        lflgOut = `
-          <b>${type}</b><br>
-          Contractile Reserve: <b>${contractileReserve}</b><br>
-          DSE Classification: <b>${classification}</b><br><br>
-          Baseline: AVA ${baselineAVA} cm² | MG ${baselineMG} mmHg | SVi ${baselineSVi} mL/m² | LVEF ${baselineLVEF} %<br>
-          DSE: AVA ${dseAVA || '-'} cm² | MG ${dseMG || '-'} mmHg | Vmax ${dseVmax || '-'} m/s
-        `;
+        lflgOut = `<b>${type}</b><br>Contractile Reserve: <b>${contractileReserve}</b><br>DSE Classification: <b>${classification}</b><br><br>Baseline: AVA ${baselineAVA} cm² | MG ${baselineMG} mmHg | SVi ${baselineSVi} mL/m² | LVEF ${baselineLVEF} %<br>DSE: AVA ${dseAVA || '-'} cm² | MG ${dseMG || '-'} mmHg | Vmax ${dseVmax || '-'} m/s`;
       }
-    // ==================== MITRAL REGURGITATION (Abbott MitraClip) ====================
-    const vcWidth = v('vcWidth');
-    const eroA = v('eroA');
-    const regurgVol = v('regurgVol');
-    const regurgFraction = v('regurgFraction');
-    const jetAreaLA = v('jetAreaLA');
-    const pisaRadius = v('pisaRadius');
-    const aliasingVel = v('aliasingVel');
-    const mrVTI = v('mrVTI');
-    const mvaPlanimetry = v('mvaPlanimetry');
-    const meanPGForward = v('meanPGForward');
+    }
 
+    // Abbott MitraClip Mitral Regurgitation
+    const vcWidth = v('vcWidth'), eroA = v('eroA'), regurgVol = v('regurgVol'), regurgFraction = v('regurgFraction'), jetAreaLA = v('jetAreaLA');
+    const pisaRadius = v('pisaRadius'), aliasingVel = v('aliasingVel'), mrVTI = v('mrVTI'), mvaPlanimetry = v('mvaPlanimetry'), meanPGForward = v('meanPGForward');
     let mrOut = '';
     let calculatedEROA = null;
-
-    // Auto-calculate EROA from PISA
     if (pisaRadius && aliasingVel && mrVTI) {
       calculatedEROA = (2 * Math.PI * Math.pow(pisaRadius, 2) * aliasingVel) / mrVTI;
     }
-
     const finalEROA = eroA || calculatedEROA;
-
     if (finalEROA || vcWidth || regurgVol || regurgFraction) {
       let severity = 'Mild';
-      if (finalEROA && finalEROA >= 0.4 || regurgVol && regurgVol >= 60 || regurgFraction && regurgFraction >= 50) {
-        severity = 'Severe';
-      } else if (finalEROA && finalEROA >= 0.2 || regurgVol && regurgVol >= 30 || regurgFraction && regurgFraction >= 30) {
-        severity = 'Moderate';
-      }
-
-      mrOut = `
-        <b>Mitral Regurgitation (Abbott MitraClip Screening)</b><br><br>
-        Vena Contracta: ${vcWidth?.toFixed(2) || '-'} cm<br>
-        EROA: ${finalEROA ? finalEROA.toFixed(2) : '-'} cm² ${calculatedEROA ? '(PISA calc)' : ''}<br>
-        Regurgitant Volume: ${regurgVol?.toFixed(1) || '-'} mL<br>
-        Regurgitant Fraction: ${regurgFraction?.toFixed(1) || '-'} %<br>
-        Jet Area / LA Area: ${jetAreaLA?.toFixed(1) || '-'} %<br>
-        Forward Mean PG: ${meanPGForward?.toFixed(1) || '-'} mmHg<br>
-        MVA Planimetry: ${mvaPlanimetry?.toFixed(2) || '-'} cm²<br>
-        <b>${severity} MR</b>
-      `;
+      if (finalEROA && finalEROA >= 0.4 || regurgVol && regurgVol >= 60 || regurgFraction && regurgFraction >= 50) severity = 'Severe';
+      else if (finalEROA && finalEROA >= 0.2 || regurgVol && regurgVol >= 30 || regurgFraction && regurgFraction >= 30) severity = 'Moderate';
+      mrOut = `<b>Mitral Regurgitation (Abbott MitraClip Screening)</b><br><br>Vena Contracta: ${vcWidth?.toFixed(2) || '-'} cm<br>EROA: ${finalEROA ? finalEROA.toFixed(2) : '-'} cm² ${calculatedEROA ? '(PISA calc)' : ''}<br>Regurgitant Volume: ${regurgVol?.toFixed(1) || '-'} mL<br>Regurgitant Fraction: ${regurgFraction?.toFixed(1) || '-'} %<br>Jet Area / LA Area: ${jetAreaLA?.toFixed(1) || '-'} %<br>Forward Mean PG: ${meanPGForward?.toFixed(1) || '-'} mmHg<br>MVA Planimetry: ${mvaPlanimetry?.toFixed(2) || '-'} cm²<br><b>${severity} MR</b>`;
     }
 
     setResults({ patient: patientOut, lv: lvOut, dia: diaOut, av: avOut, ms: msOut, phtn1: phtn1Out, phtn2: phtn2Out, hemo: hemoOut, lflg: lflgOut, mr: mrOut });
@@ -288,7 +233,7 @@ export default function EchoFreeCalculator() {
       </CardHeader>
       <CardContent className="p-0">
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 p-6">
-          {/* Patient Card - FIXED bidirectional conversion */}
+          {/* Patient Card - fixed conversion */}
           <div className="bg-[#111827] border-2 border-cyan-400 rounded-3xl p-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-cyan-300 text-xl">Patient</h3>
@@ -301,29 +246,14 @@ export default function EchoFreeCalculator() {
                 <option value="female">Female</option>
               </select>
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <div className="text-xs text-cyan-400 mb-1">Height (cm)</div>
-                  <input type="number" inputMode="decimal" value={inputs.heightCm} onChange={e => updateHeightCm(e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" />
-                </div>
-                <div>
-                  <div className="text-xs text-cyan-400 mb-1">Height (in)</div>
-                  <input type="number" inputMode="decimal" value={inputs.heightIn} onChange={e => updateHeightIn(e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" />
-                </div>
+                <div><div className="text-xs text-cyan-400 mb-1">Height (cm)</div><input type="number" inputMode="decimal" value={inputs.heightCm} onChange={e => updateHeightCm(e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+                <div><div className="text-xs text-cyan-400 mb-1">Height (in)</div><input type="number" inputMode="decimal" value={inputs.heightIn} onChange={e => updateHeightIn(e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <div className="text-xs text-cyan-400 mb-1">Weight (kg)</div>
-                  <input type="number" inputMode="decimal" value={inputs.weightKg} onChange={e => updateWeightKg(e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" />
-                </div>
-                <div>
-                  <div className="text-xs text-cyan-400 mb-1">Weight (lb)</div>
-                  <input type="number" inputMode="decimal" value={inputs.weightLb} onChange={e => updateWeightLb(e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" />
-                </div>
+                <div><div className="text-xs text-cyan-400 mb-1">Weight (kg)</div><input type="number" inputMode="decimal" value={inputs.weightKg} onChange={e => updateWeightKg(e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+                <div><div className="text-xs text-cyan-400 mb-1">Weight (lb)</div><input type="number" inputMode="decimal" value={inputs.weightLb} onChange={e => updateWeightLb(e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
               </div>
-              <div>
-                <div className="text-xs text-cyan-400 mb-1">Heart Rate (bpm)</div>
-                <input type="number" inputMode="decimal" value={inputs.hr} onChange={e => update('hr', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" />
-              </div>
+              <div><div className="text-xs text-cyan-400 mb-1">Heart Rate (bpm)</div><input type="number" inputMode="decimal" value={inputs.hr} onChange={e => update('hr', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
               {results.patient && <div className="bg-green-900/30 border border-green-400 p-4 rounded-2xl text-center font-semibold text-green-400">{results.patient}</div>}
             </div>
           </div>
@@ -347,7 +277,7 @@ export default function EchoFreeCalculator() {
             {results.lv && <div className="mt-6 bg-green-900/30 border border-green-400 p-5 rounded-2xl text-sm leading-relaxed" dangerouslySetInnerHTML={{ __html: results.lv }} />}
           </div>
 
-          {/* Diastology - updated labels + units */}
+          {/* Diastology */}
           <div className="bg-[#111827] border-2 border-cyan-400 rounded-3xl p-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-cyan-300 text-xl">Diastology</h3>
@@ -383,7 +313,7 @@ export default function EchoFreeCalculator() {
             {results.av && <div className="mt-6 bg-green-900/30 border border-green-400 p-5 rounded-2xl text-sm" dangerouslySetInnerHTML={{ __html: results.av }} />}
           </div>
 
-          {/* Hemodynamics - moved here */}
+          {/* Hemodynamics */}
           <div className="bg-[#111827] border-2 border-cyan-400 rounded-3xl p-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-cyan-300 text-xl">Hemodynamics</h3>
@@ -396,7 +326,7 @@ export default function EchoFreeCalculator() {
             {results.hemo && <div className="mt-6 bg-green-900/30 border border-green-400 p-5 rounded-2xl text-sm" dangerouslySetInnerHTML={{ __html: results.hemo }} />}
           </div>
 
-          {/* New / Reworked LFLG AS Card - placed under Hemodynamics */}
+          {/* LFLG AS */}
           <div className="bg-[#111827] border-2 border-cyan-400 rounded-3xl p-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-cyan-300 text-xl">Low-Flow Low-Gradient AS</h3>
@@ -456,7 +386,7 @@ export default function EchoFreeCalculator() {
             {results.phtn2 && <div className="mt-6 bg-green-900/30 border border-green-400 p-5 rounded-2xl text-sm" dangerouslySetInnerHTML={{ __html: results.phtn2 }} />}
           </div>
 
-          {/* New Abbott MitraClip Mitral Regurgitation Card */}
+          {/* Abbott MitraClip Mitral Regurgitation */}
           <div className="bg-[#111827] border-2 border-cyan-400 rounded-3xl p-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-cyan-300 text-xl">Mitral Regurgitation (Abbott MitraClip Screening)</h3>
@@ -493,4 +423,4 @@ export default function EchoFreeCalculator() {
       </CardContent>
     </Card>
   );
-}}
+}
