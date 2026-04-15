@@ -154,50 +154,64 @@ export default function EchoFreeCalculator() {
       diaOut = `${grade}<br>LA Size: ${laSize}<br>LA Pressure: ${lap}<br><br>E/A: ${ratio.toFixed(2)}<br>E/e' septal: ${(E/es).toFixed(1)}<br>E/e' lateral: ${(E/el).toFixed(1)}<br>E/e' avg: ${(E/eavg).toFixed(1)}`;
     }
 
-    // Aortic Stenosis + TAVR/Prosthetic
-    const vmax = v('vmax'), mg = v('mg'), lvotd = v('lvotd'), lvotvti = v('lvotvti'), avvti = v('avvti');
-    const avAT = v('avAT');
-    const jetContour = inputs.jetContour;
-    const isProsthetic = inputs.isProsthetic;
+          // Aortic Stenosis + TAVR/Prosthetic (updated logic - shows every time checkbox is checked)
+      const vmax = v('vmax'), mg = v('mg'), lvotd = v('lvotd'), lvotvti = v('lvotvti'), avvti = v('avvti');
+      const avAT = v('avAT');
+      const jetContour = inputs.jetContour;
+      const isProsthetic = inputs.isProsthetic;
 
-    let avOut = '';
-    if (vmax || mg) {
-      const ava = lvotd && lvotvti && avvti ? (3.14 * Math.pow(lvotd / 2, 2) * lvotvti) / avvti : null;
-      const di = lvotvti && avvti ? lvotvti / avvti : null;
-      const v_sev = vmax && vmax >= 4 ? 'Severe' : vmax && vmax >= 3 ? 'Moderate' : 'Mild';
-      const g_sev = mg && mg >= 40 ? 'Severe' : mg && mg >= 20 ? 'Moderate' : 'Mild';
-      const a_sev = ava && ava <= 1 ? 'Severe' : ava && ava <= 1.5 ? 'Moderate' : 'Mild';
-      const di_sev = di && di < 0.25 ? 'Severe' : di && di < 0.5 ? 'Moderate' : 'Mild';
+      let avOut = '';
+      if (vmax || mg) {
+        const ava = lvotd && lvotvti && avvti ? (3.14 * Math.pow(lvotd / 2, 2) * lvotvti) / avvti : null;
+        const di = lvotvti && avvti ? lvotvti / avvti : null;
 
-      let scores = { mild: 0, moderate: 0, severe: 0 };
-      if (vmax) { if (vmax >= 4) scores.severe++; else if (vmax >= 3) scores.moderate++; else scores.mild++; }
-      if (mg) { if (mg >= 40) scores.severe++; else if (mg >= 20) scores.moderate++; else scores.mild++; }
-      if (ava) { if (ava <= 1) scores.severe++; else if (ava <= 1.5) scores.moderate++; else scores.mild++; }
-      if (di) { if (di < 0.25) scores.severe++; else if (di < 0.5) scores.moderate++; else scores.mild++; }
+        const v_sev = vmax && vmax >= 4 ? 'Severe' : vmax && vmax >= 3 ? 'Moderate' : 'Mild';
+        const g_sev = mg && mg >= 40 ? 'Severe' : mg && mg >= 20 ? 'Moderate' : 'Mild';
+        const a_sev = ava && ava <= 1 ? 'Severe' : ava && ava <= 1.5 ? 'Moderate' : 'Mild';
+        const di_sev = di && di < 0.25 ? 'Severe' : di && di < 0.5 ? 'Moderate' : 'Mild';
 
-      let final = 'Indeterminate';
-      if (scores.severe >= 2) final = 'Severe AS';
-      else if (scores.moderate >= 2) final = 'Moderate AS';
-      else if (scores.mild >= 2) final = 'Mild AS';
+        let scores = { mild: 0, moderate: 0, severe: 0 };
+        if (vmax) { if (vmax >= 4) scores.severe++; else if (vmax >= 3) scores.moderate++; else scores.mild++; }
+        if (mg) { if (mg >= 40) scores.severe++; else if (mg >= 20) scores.moderate++; else scores.mild++; }
+        if (ava) { if (ava <= 1) scores.severe++; else if (ava <= 1.5) scores.moderate++; else scores.mild++; }
+        if (di) { if (di < 0.25) scores.severe++; else if (di < 0.5) scores.moderate++; else scores.mild++; }
 
-      avOut = `Vmax: ${vmax?.toFixed(2) || '-'} m/s (${v_sev})<br>Mean Gradient: ${mg?.toFixed(1) || '-'} mmHg (${g_sev})<br>AVA: ${ava?.toFixed(2) || '-'} cm² (${a_sev})<br>DVI: ${di?.toFixed(2) || '-'} (${di_sev})<br><b>Final Severity: ${final}</b>`;
+        let final = 'Indeterminate';
+        if (scores.severe >= 2) final = 'Severe AS';
+        else if (scores.moderate >= 2) final = 'Moderate AS';
+        else if (scores.mild >= 2) final = 'Mild AS';
 
-      if (isProsthetic && vmax && vmax > 3) {
-        let tavrNote = '<br><b>TAVR/Prosthetic Evaluation:</b><br>';
-        if (di !== null) {
-          if (di >= 0.30) tavrNote += 'DVI ≥0.30 → Normal PrAV<br>';
-          else if (di >= 0.25) tavrNote += 'DVI 0.25–0.29 → Possible PPM or mild stenosis<br>';
-          else tavrNote += 'DVI <0.25 → Suggests PrAV Stenosis<br>';
+        avOut = `Vmax: ${vmax?.toFixed(2) || '-'} m/s (${v_sev})<br>
+                 Mean Gradient: ${mg?.toFixed(1) || '-'} mmHg (${g_sev})<br>
+                 AVA: ${ava?.toFixed(2) || '-'} cm² (${a_sev})<br>
+                 DVI: ${di?.toFixed(2) || '-'} (${di_sev})<br>
+                 <b>Final Severity: ${final}</b>`;
+
+        // Prosthetic / TAVR Evaluation (now shows whenever checkbox is checked)
+        if (isProsthetic) {
+          let tavrNote = '<br><b>TAVR / Prosthetic Evaluation:</b><br>';
+          
+          if (di !== null) {
+            if (di >= 0.30) tavrNote += '✅ DVI ≥0.30 → Normal PrAV<br>';
+            else if (di >= 0.25) tavrNote += '⚠️ DVI 0.25–0.29 → Possible PPM or mild stenosis<br>';
+            else tavrNote += '❌ DVI <0.25 → Suggests PrAV Stenosis<br>';
+          }
+          
+          if (avAT !== null) {
+            tavrNote += `AT ${avAT} ms → ${avAT > 100 ? '❌ Suggests PrAV Stenosis' : '✅ Normal PrAV'}<br>`;
+          }
+          
+          if (jetContour) {
+            tavrNote += `Jet Contour: ${jetContour} → ${jetContour === 'rounded' ? '❌ Suggests stenosis' : '✅ Normal flow'}<br>`;
+          }
+          
+          if (vmax && vmax <= 3) {
+            tavrNote += '<b>Overall: Normal functioning prosthetic valve</b>';
+          }
+          
+          avOut += tavrNote;
         }
-        if (avAT !== null) {
-          tavrNote += `AT ${avAT} ms → ${avAT > 100 ? 'Suggests PrAV Stenosis' : 'Normal PrAV'}<br>`;
-        }
-        if (jetContour) {
-          tavrNote += `Jet Contour: ${jetContour} → ${jetContour === 'rounded' ? 'Suggests stenosis' : 'Normal flow'}<br>`;
-        }
-        avOut += tavrNote;
       }
-    }
 
     // Hemodynamics
     const lvotd_h = v('lvotd'), lvotvti_h = v('lvotvti'), hr = v('hr');
