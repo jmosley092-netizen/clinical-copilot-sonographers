@@ -298,7 +298,7 @@ export default function EchoFreeCalculator() {
       let severity = 'Mild';
       if (finalEROA && finalEROA >= 0.4 || regurgVol && regurgVol >= 60 || regurgFraction && regurgFraction >= 50) severity = 'Severe';
       else if (finalEROA && finalEROA >= 0.2 || regurgVol && regurgVol >= 30 || regurgFraction && regurgFraction >= 30) severity = 'Moderate';
-      mrOut = `<b>Mitral Regurgitation (Abbott MitraClip Screening)</b><br><br>Vena Contracta: ${vcWidth?.toFixed(2) || '-'} cm<br>EROA: ${finalEROA ? finalEROA.toFixed(2) : '-'} cm² ${calculatedEROA ? '(PISA calc)' : ''}<br>Regurgitant Volume: ${regurgVol?.toFixed(1) || '-'} mL<br>Regurgitant Fraction: ${regurgFraction?.toFixed(1) || '-'} %<br>Jet Area / LA Area: ${jetAreaLA?.toFixed(1) || '-'} %<br>Forward Mean PG: ${meanPGForward?.toFixed(1) || '-'} mmHg<br>MVA Planimetry: ${mvaPlanimetry?.toFixed(2) || '-'} cm²<br><b>${severity} MR</b>`;
+      mrOut = `<b>Mitral Regurgitation</b><br><br>Vena Contracta: ${vcWidth?.toFixed(2) || '-'} cm<br>EROA: ${finalEROA ? finalEROA.toFixed(2) : '-'} cm² ${calculatedEROA ? '(PISA calc)' : ''}<br>Regurgitant Volume: ${regurgVol?.toFixed(1) || '-'} mL<br>Regurgitant Fraction: ${regurgFraction?.toFixed(1) || '-'} %<br>Jet Area / LA Area: ${jetAreaLA?.toFixed(1) || '-'} %<br>Forward Mean PG: ${meanPGForward?.toFixed(1) || '-'} mmHg<br>MVA Planimetry: ${mvaPlanimetry?.toFixed(2) || '-'} cm²<br><b>${severity} MR</b>`;
     }
 
     setResults({ patient: patientOut, lv: lvOut, dia: diaOut, av: avOut, ms: msOut, phtn1: phtn1Out, phtn2: phtn2Out, hemo: hemoOut, lflg: lflgOut, mr: mrOut });
