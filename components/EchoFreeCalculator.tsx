@@ -23,7 +23,7 @@ interface CalculatorInputs {
   tapse: string; pr: string;
   // LFLG AS
   baselineAVA: string; baselineMG: string; baselineSVi: string; baselineLVEF: string;
-  dseAVA: string; dseMG: string; dseVmax: string; dseSVi: string; deltaSVPercent: string;
+  dseAVA: string; dseMG: string; dseSVi: string; dseVmax: string; deltaSVPercent: string;
   //  MR
   vcWidth: string; eroA: string; regurgVol: string; regurgFraction: string;
   jetAreaLA: string; pisaRadius: string; aliasingVel: string; mrVTI: string;
@@ -44,7 +44,7 @@ export default function EchoFreeCalculator() {
     trv: "", rap: "", rvotat: "",
     tapse: "", pr: "",
     baselineAVA: "", baselineMG: "", baselineSVi: "", baselineLVEF: "",
-    dseAVA: "", dseMG: "", dseVmax: "", dseSVi: "", deltaSVPercent: "",
+    dseAVA: "", dseMG: "", dseSVi: "", dseVmax: "", deltaSVPercent: "",
     vcWidth: "", eroA: "", regurgVol: "", regurgFraction: "", jetAreaLA: "",
     pisaRadius: "", aliasingVel: "", mrVTI: "", mvaPlanimetry: "", meanPGForward: "",
     mvMorphology: "", jetOrigin: "", pvFlowReversal: "",
