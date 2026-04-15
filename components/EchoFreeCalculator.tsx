@@ -23,7 +23,7 @@ interface CalculatorInputs {
   tapse: string; pr: string;
   // LFLG AS
   baselineAVA: string; baselineMG: string; baselineSVi: string; baselineLVEF: string;
-  dseAVA: string; dseMG: string; dseVmax: string; deltaSVPercent: string;
+  dseAVA: string; dseMG: string; dseVmax: string; dseSVi: string; deltaSVPercent: string;
   //  MR
   vcWidth: string; eroA: string; regurgVol: string; regurgFraction: string;
   jetAreaLA: string; pisaRadius: string; aliasingVel: string; mrVTI: string;
@@ -44,7 +44,7 @@ export default function EchoFreeCalculator() {
     trv: "", rap: "", rvotat: "",
     tapse: "", pr: "",
     baselineAVA: "", baselineMG: "", baselineSVi: "", baselineLVEF: "",
-    dseAVA: "", dseMG: "", dseVmax: "", deltaSVPercent: "",
+    dseAVA: "", dseMG: "", dseVmax: "", dseSVi: "", deltaSVPercent: "",
     vcWidth: "", eroA: "", regurgVol: "", regurgFraction: "", jetAreaLA: "",
     pisaRadius: "", aliasingVel: "", mrVTI: "", mvaPlanimetry: "", meanPGForward: "",
     mvMorphology: "", jetOrigin: "", pvFlowReversal: "",
@@ -263,25 +263,54 @@ export default function EchoFreeCalculator() {
     const conf = score >= 2 ? 'High probability PH' : score === 1 ? 'Intermediate' : 'Low';
     const phtn2Out = `Score: ${score}/3<br><b>${conf}</b>`;
 
-    // LFLG AS
-    const baselineAVA = v('baselineAVA'), baselineMG = v('baselineMG'), baselineSVi = v('baselineSVi'), baselineLVEF = v('baselineLVEF');
-    const dseAVA = v('dseAVA'), dseMG = v('dseMG'), dseVmax = v('dseVmax'), deltaSVPercent = v('deltaSVPercent');
+        // LFLG AS (with automatic ΔSV% calculation)
+    const baselineAVA = v('baselineAVA');
+    const baselineMG = v('baselineMG');
+    const baselineSVi = v('baselineSVi');
+    const baselineLVEF = v('baselineLVEF');
+    const dseAVA = v('dseAVA');
+    const dseMG = v('dseMG');
+    const dseVmax = v('dseVmax');
+    const dseSVi = v('dseSVi');                    // ← new field
+
     let lflgOut = '';
-    if (baselineAVA && baselineMG && baselineSVi !== null && baselineLVEF !== null) {
+    let deltaSVPercent = null;
+
+    if (baselineSVi !== null && dseSVi !== null) {
+      deltaSVPercent = ((dseSVi - baselineSVi) / baselineSVi) * 100;
+    }
+
+    if (baselineAVA !== null && baselineMG !== null && baselineSVi !== null && baselineLVEF !== null) {
       const isLowFlow = baselineSVi <= 35;
       const isLowGradient = baselineMG < 40;
       const isSevereAVA = baselineAVA <= 1.0;
       const isReducedEF = baselineLVEF < 50;
+
       if (isLowFlow && isLowGradient && isSevereAVA) {
         const type = isReducedEF ? "Classical LFLG AS" : "Paradoxical LFLG AS";
+
         let contractileReserve = "Unknown";
         let classification = "Indeterminate";
-        if (deltaSVPercent !== null) contractileReserve = deltaSVPercent >= 20 ? "Present (≥20% ↑ SV)" : "Absent (<20% ↑ SV)";
-        if (dseAVA !== null && dseMG !== null && dseVmax !== null) {
-          if (dseAVA <= 1.0 && (dseMG >= 40 || dseVmax >= 4)) classification = "True Severe AS";
-          else if (dseAVA > 1.0) classification = "Pseudo-Severe AS";
+
+        if (deltaSVPercent !== null) {
+          contractileReserve = deltaSVPercent >= 20 
+            ? `Present (↑ ${deltaSVPercent.toFixed(1)}%)` 
+            : `Absent (↑ ${deltaSVPercent.toFixed(1)}%)`;
         }
-        lflgOut = `<b>${type}</b><br>Contractile Reserve: <b>${contractileReserve}</b><br>DSE Classification: <b>${classification}</b><br><br>Baseline: AVA ${baselineAVA} cm² | MG ${baselineMG} mmHg | SVi ${baselineSVi} mL/m² | LVEF ${baselineLVEF} %<br>DSE: AVA ${dseAVA || '-'} cm² | MG ${dseMG || '-'} mmHg | Vmax ${dseVmax || '-'} m/s`;
+
+        if (dseAVA !== null && dseMG !== null && dseVmax !== null) {
+          if (dseAVA <= 1.0 && (dseMG >= 40 || dseVmax >= 4)) {
+            classification = "True Severe AS";
+          } else if (dseAVA > 1.0) {
+            classification = "Pseudo-Severe AS";
+          }
+        }
+
+        lflgOut = `<b>${type}</b><br>
+                   Contractile Reserve: <b>${contractileReserve}</b><br>
+                   DSE Classification: <b>${classification}</b><br><br>
+                   Baseline: AVA ${baselineAVA} cm² | MG ${baselineMG} mmHg | SVi ${baselineSVi} mL/m² | LVEF ${baselineLVEF} %<br>
+                   DSE: AVA ${dseAVA || '-'} cm² | MG ${dseMG || '-'} mmHg | Vmax ${dseVmax || '-'} m/s | SVi ${dseSVi || '-'} mL/m²`;
       }
     }
 
