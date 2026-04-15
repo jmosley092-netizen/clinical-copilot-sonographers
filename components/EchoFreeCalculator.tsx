@@ -24,7 +24,7 @@ interface CalculatorInputs {
   // LFLG AS
   baselineAVA: string; baselineMG: string; baselineSVi: string; baselineLVEF: string;
   dseAVA: string; dseMG: string; dseVmax: string; deltaSVPercent: string;
-  // Abbott MitraClip MR
+  //  MR
   vcWidth: string; eroA: string; regurgVol: string; regurgFraction: string;
   jetAreaLA: string; pisaRadius: string; aliasingVel: string; mrVTI: string;
   mvaPlanimetry: string; meanPGForward: string;
@@ -488,7 +488,7 @@ export default function EchoFreeCalculator() {
           {/* Abbott MitraClip Mitral Regurgitation */}
           <div className="bg-[#111827] border-2 border-cyan-400 rounded-3xl p-6">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-cyan-300 text-xl">Mitral Regurgitation (Abbott MitraClip Screening)</h3>
+              <h3 className="text-cyan-300 text-xl">Mitral Regurgitation</h3>
               <button onClick={() => resetCard(['vcWidth','eroA','regurgVol','regurgFraction','jetAreaLA','pisaRadius','aliasingVel','mrVTI','mvaPlanimetry','meanPGForward','mvMorphology','jetOrigin','pvFlowReversal'])} className="px-4 py-1 text-xs bg-blue-600 hover:bg-blue-700 rounded-xl">Reset</button>
             </div>
             <div className="grid grid-cols-2 gap-4">
