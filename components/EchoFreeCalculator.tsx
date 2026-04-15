@@ -454,23 +454,34 @@ export default function EchoFreeCalculator() {
             {results.hemo && <div className="mt-6 bg-green-900/30 border border-green-400 p-5 rounded-2xl text-sm" dangerouslySetInnerHTML={{ __html: results.hemo }} />}
           </div>
 
-          {/* LFLG AS */}
+                    {/* Low-Flow Low-Gradient AS Card */}
           <div className="bg-[#111827] border-2 border-cyan-400 rounded-3xl p-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-cyan-300 text-xl">Low-Flow Low-Gradient AS</h3>
-              <button onClick={() => resetCard(['baselineAVA','baselineMG','baselineSVi','baselineLVEF','dseAVA','dseMG','dseVmax','deltaSVPercent'])} className="px-4 py-1 text-xs bg-blue-600 hover:bg-blue-700 rounded-xl">Reset</button>
+              <button 
+                onClick={() => resetCard(['baselineAVA','baselineMG','baselineSVi','baselineLVEF','dseAVA','dseMG','dseVmax','dseSVi'])} 
+                className="px-4 py-1 text-xs bg-blue-600 hover:bg-blue-700 rounded-xl"
+              >
+                Reset
+              </button>
             </div>
-            <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className="grid grid-cols-2 gap-4">
               <div><div className="text-xs text-cyan-400 mb-1">Baseline AVA (cm²)</div><input type="number" step="0.1" inputMode="decimal" value={inputs.baselineAVA} onChange={e => update('baselineAVA', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
               <div><div className="text-xs text-cyan-400 mb-1">Baseline MG (mmHg)</div><input type="number" step="0.1" inputMode="decimal" value={inputs.baselineMG} onChange={e => update('baselineMG', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
-              <div><div className="text-xs text-cyan-400 mb-1">Baseline SVi (mL/m²)</div><input type="number" step="0.1" inputMode="decimal" value={inputs.baselineSVi} onChange={e => update('baselineSVi', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
-              <div><div className="text-xs text-cyan-400 mb-1">Baseline LVEF (%)</div><input type="number" inputMode="decimal" value={inputs.baselineLVEF} onChange={e => update('baselineLVEF', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+              
+              <div><div className="text-xs text-cyan-400 mb-1">Baseline SVI (mL/m²)</div><input type="number" step="0.1" inputMode="decimal" value={inputs.baselineSVi} onChange={e => update('baselineSVi', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+              <div><div className="text-xs text-cyan-400 mb-1">Baseline LVEF (%)</div><input type="number" step="0.1" inputMode="decimal" value={inputs.baselineLVEF} onChange={e => update('baselineLVEF', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+              
               <div><div className="text-xs text-cyan-400 mb-1">DSE AVA (cm²)</div><input type="number" step="0.1" inputMode="decimal" value={inputs.dseAVA} onChange={e => update('dseAVA', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
               <div><div className="text-xs text-cyan-400 mb-1">DSE MG (mmHg)</div><input type="number" step="0.1" inputMode="decimal" value={inputs.dseMG} onChange={e => update('dseMG', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+              
               <div><div className="text-xs text-cyan-400 mb-1">DSE Vmax (m/s)</div><input type="number" step="0.1" inputMode="decimal" value={inputs.dseVmax} onChange={e => update('dseVmax', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
-              <div><div className="text-xs text-cyan-400 mb-1">ΔSV (% increase)</div><input type="number" step="0.1" inputMode="decimal" value={inputs.deltaSVPercent} onChange={e => update('deltaSVPercent', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+              <div><div className="text-xs text-cyan-400 mb-1">DSE SVI (mL/m²)</div><input type="number" step="0.1" inputMode="decimal" value={inputs.dseSVi} onChange={e => update('dseSVi', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
             </div>
-            {results.lflg && <div className="mt-6 bg-green-900/30 border border-green-400 p-5 rounded-2xl text-sm leading-relaxed" dangerouslySetInnerHTML={{ __html: results.lflg }} />}
+
+            {results.lflg && (
+              <div className="mt-6 bg-green-900/30 border border-green-400 p-5 rounded-2xl text-sm" dangerouslySetInnerHTML={{ __html: results.lflg }} />
+            )}
           </div>
 
           {/* Mitral Stenosis */}
