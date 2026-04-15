@@ -13,7 +13,7 @@ export default function EchoFreeCalculator() {
     pht: "", mgrad: "", mvplan: "",
     trv: "", rap: "", rvotat: "",
     tapse: "", pr: "",
-    // LFLG AS fields
+    // LFLG AS
     baselineAVA: "", baselineMG: "", baselineSVi: "", baselineLVEF: "",
     dseAVA: "", dseMG: "", dseVmax: "", deltaSVPercent: "",
     // Mitral Regurgitation (Abbott MitraClip protocol)
@@ -72,13 +72,8 @@ export default function EchoFreeCalculator() {
     return val ? parseFloat(val) : null;
   };
 
-  const calculateBSA = (cm: number | null, kg: number | null) => {
-    if (!cm || !kg) return null;
-    return Math.sqrt((cm * kg) / 3600);
-  };
-
   const calculateAll = () => {
-    const bsa = calculateBSA(v('heightCm'), v('weightKg'));
+    const bsa = v('heightCm') && v('weightKg') ? Math.sqrt((v('heightCm')! * v('weightKg')!) / 3600) : null;
     const gender = inputs.gender;
 
     // Patient
@@ -461,7 +456,7 @@ export default function EchoFreeCalculator() {
             {results.phtn2 && <div className="mt-6 bg-green-900/30 border border-green-400 p-5 rounded-2xl text-sm" dangerouslySetInnerHTML={{ __html: results.phtn2 }} />}
           </div>
 
-{/* New Abbott MitraClip Mitral Regurgitation Card */}
+          {/* New Abbott MitraClip Mitral Regurgitation Card */}
           <div className="bg-[#111827] border-2 border-cyan-400 rounded-3xl p-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-cyan-300 text-xl">Mitral Regurgitation (Abbott MitraClip Screening)</h3>
