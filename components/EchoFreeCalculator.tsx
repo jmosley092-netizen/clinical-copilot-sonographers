@@ -306,11 +306,12 @@ export default function EchoFreeCalculator() {
           }
         }
 
-        lflgOut = `<b>${type}</b><br>
-                   Contractile Reserve: <b>${contractileReserve}</b><br>
-                   DSE Classification: <b>${classification}</b><br><br>
-                   Baseline: AVA ${baselineAVA} cm² | MG ${baselineMG} mmHg | SVi ${baselineSVi} mL/m² | LVEF ${baselineLVEF} %<br>
-                   DSE: AVA ${dseAVA || '-'} cm² | MG ${dseMG || '-'} mmHg | Vmax ${dseVmax || '-'} m/s | SVi ${dseSVi || '-'} mL/m²`;
+            // LFLG AS output (fixed + includes DSE Vmax)
+    lflgOut = `<b>${type}</b><br>
+               Contractile Reserve: <b>${contractileReserve}</b><br>
+               DSE Classification: <b>${classification}</b><br><br>
+               Baseline: AVA ${baselineAVA} cm² | MG ${baselineMG} mmHg | SVi ${baselineSVi} mL/m² | LVEF ${baselineLVEF} %<br>
+               DSE: AVA ${dseAVA || '-'} cm² | MG ${dseMG || '-'} mmHg | Vmax ${dseVmax || '-'} m/s | SVi ${dseSVi || '-'} mL/m²`;
       }
     }
 
