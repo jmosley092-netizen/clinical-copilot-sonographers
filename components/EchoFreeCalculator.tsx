@@ -13,8 +13,7 @@ export default function EchoFreeCalculator() {
     pht: "", mgrad: "", mvplan: "",
     trv: "", rap: "", rvotat: "",
     tapse: "", pr: "",
-    lvotd_h: "", lvotvti_h: "",
-    // LFLG AS new fields
+    // LFLG AS fields
     baselineAVA: "", baselineMG: "", baselineSVi: "", baselineLVEF: "",
     dseAVA: "", dseMG: "", dseVmax: "", deltaSVPercent: ""
   });
@@ -22,6 +21,39 @@ export default function EchoFreeCalculator() {
   const [results, setResults] = useState({
     patient: "", lv: "", dia: "", av: "", ms: "", phtn1: "", phtn2: "", hemo: "", lflg: ""
   });
+
+  // === BIDIRECTIONAL UNIT CONVERSION (fixed) ===
+  const updateHeightCm = (value: string) => {
+    setInputs(prev => ({
+      ...prev,
+      heightCm: value,
+      heightIn: value ? (parseFloat(value) / 2.54).toFixed(1) : ""
+    }));
+  };
+
+  const updateHeightIn = (value: string) => {
+    setInputs(prev => ({
+      ...prev,
+      heightIn: value,
+      heightCm: value ? (parseFloat(value) * 2.54).toFixed(1) : ""
+    }));
+  };
+
+  const updateWeightKg = (value: string) => {
+    setInputs(prev => ({
+      ...prev,
+      weightKg: value,
+      weightLb: value ? (parseFloat(value) * 2.20462).toFixed(1) : ""
+    }));
+  };
+
+  const updateWeightLb = (value: string) => {
+    setInputs(prev => ({
+      ...prev,
+      weightLb: value,
+      weightKg: value ? (parseFloat(value) / 2.20462).toFixed(1) : ""
+    }));
+  };
 
   const update = (key: string, value: string) => {
     setInputs(prev => ({ ...prev, [key]: value }));
@@ -206,7 +238,9 @@ export default function EchoFreeCalculator() {
     setResults({ patient: patientOut, lv: lvOut, dia: diaOut, av: avOut, ms: msOut, phtn1: phtn1Out, phtn2: phtn2Out, hemo: hemoOut, lflg: lflgOut });
   };
 
-  useEffect(() => { calculateAll(); }, [inputs]);
+  useEffect(() => {
+    calculateAll();
+  }, [inputs]);
 
   return (
     <Card className="border-zinc-700 bg-zinc-900">
@@ -218,7 +252,7 @@ export default function EchoFreeCalculator() {
       </CardHeader>
       <CardContent className="p-0">
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 p-6">
-          {/* Patient Card */}
+          {/* Patient Card - FIXED bidirectional conversion */}
           <div className="bg-[#111827] border-2 border-cyan-400 rounded-3xl p-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-cyan-300 text-xl">Patient</h3>
@@ -230,16 +264,30 @@ export default function EchoFreeCalculator() {
                 <option value="male">Male</option>
                 <option value="female">Female</option>
               </select>
-              {/* height / weight fields with inputMode */}
               <div className="grid grid-cols-2 gap-3">
-                <div><div className="text-xs text-cyan-400 mb-1">Height (cm)</div><input type="number" inputMode="decimal" value={inputs.heightCm} onChange={e => update('heightCm', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
-                <div><div className="text-xs text-cyan-400 mb-1">Height (in)</div><input type="number" inputMode="decimal" value={inputs.heightIn} onChange={e => update('heightIn', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+                <div>
+                  <div className="text-xs text-cyan-400 mb-1">Height (cm)</div>
+                  <input type="number" inputMode="decimal" value={inputs.heightCm} onChange={e => updateHeightCm(e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" />
+                </div>
+                <div>
+                  <div className="text-xs text-cyan-400 mb-1">Height (in)</div>
+                  <input type="number" inputMode="decimal" value={inputs.heightIn} onChange={e => updateHeightIn(e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" />
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div><div className="text-xs text-cyan-400 mb-1">Weight (kg)</div><input type="number" inputMode="decimal" value={inputs.weightKg} onChange={e => update('weightKg', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
-                <div><div className="text-xs text-cyan-400 mb-1">Weight (lb)</div><input type="number" inputMode="decimal" value={inputs.weightLb} onChange={e => update('weightLb', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+                <div>
+                  <div className="text-xs text-cyan-400 mb-1">Weight (kg)</div>
+                  <input type="number" inputMode="decimal" value={inputs.weightKg} onChange={e => updateWeightKg(e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" />
+                </div>
+                <div>
+                  <div className="text-xs text-cyan-400 mb-1">Weight (lb)</div>
+                  <input type="number" inputMode="decimal" value={inputs.weightLb} onChange={e => updateWeightLb(e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" />
+                </div>
               </div>
-              <div><div className="text-xs text-cyan-400 mb-1">Heart Rate (bpm)</div><input type="number" inputMode="decimal" value={inputs.hr} onChange={e => update('hr', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" /></div>
+              <div>
+                <div className="text-xs text-cyan-400 mb-1">Heart Rate (bpm)</div>
+                <input type="number" inputMode="decimal" value={inputs.hr} onChange={e => update('hr', e.target.value)} className="w-full bg-zinc-900 border border-zinc-700 rounded-xl p-3" />
+              </div>
               {results.patient && <div className="bg-green-900/30 border border-green-400 p-4 rounded-2xl text-center font-semibold text-green-400">{results.patient}</div>}
             </div>
           </div>
